@@ -18,12 +18,12 @@ import (
 
 	"github.com/btcsuite/btcd/btcutil"
 	"github.com/btcsuite/btcd/chaincfg"
-	"github.com/btcsuite/btcwallet/internal/cfgutil"
-	"github.com/btcsuite/btcwallet/internal/legacy/keystore"
-	"github.com/btcsuite/btcwallet/netparams"
-	"github.com/btcsuite/btcwallet/wallet"
 	flags "github.com/jessevdk/go-flags"
 	"github.com/lightninglabs/neutrino"
+	"github.com/stroomnetwork/btcwallet/internal/cfgutil"
+	"github.com/stroomnetwork/btcwallet/internal/legacy/keystore"
+	"github.com/stroomnetwork/btcwallet/netparams"
+	"github.com/stroomnetwork/btcwallet/wallet"
 )
 
 const (
