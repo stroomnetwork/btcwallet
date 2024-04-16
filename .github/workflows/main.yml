@@ -1,12 +1,12 @@
 name: CI
 
 on:
-  push:
-    branches:
-      - "master"
-  pull_request:
-    branches:
-      - "*"
+  #push:
+  #  branches:
+  #    - "master"
+  #pull_request:
+  #  branches:
+  #    - "*"
 
 defaults:
   run:
@@ -50,8 +50,8 @@ jobs:
       - name: compile code
         run: go install -v ./...
 
-      #- name: run lint
-      #  run: make lint
+      - name: run lint
+        run: make lint
 
   ########################
   # run unit tests
