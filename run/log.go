@@ -2,7 +2,7 @@
 // Use of this source code is governed by an ISC
 // license that can be found in the LICENSE file.
 
-package main
+package run
 
 import (
 	"fmt"
@@ -60,6 +60,7 @@ var (
 	grpcLog      = backendLog.Logger("GRPC")
 	legacyRPCLog = backendLog.Logger("RPCS")
 	btcnLog      = backendLog.Logger("BTCN")
+	ExampleLog   = backendLog.Logger("EXMPL")
 )
 
 // Initialize package-global logger variables.
