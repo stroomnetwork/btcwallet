@@ -1,4 +1,4 @@
-package stroom
+package wallet
 
 import (
 	"fmt"
@@ -6,18 +6,17 @@ import (
 	"github.com/btcsuite/btcd/chaincfg/chainhash"
 	"github.com/btcsuite/btcd/wire"
 	"github.com/stroomnetwork/btcwallet/waddrmgr"
-	"github.com/stroomnetwork/btcwallet/wallet"
 	"github.com/stroomnetwork/btcwallet/wallet/txauthor"
 	"golang.org/x/net/context"
 	"time"
 )
 
-func CreateSimpleTxWithRedemptionId(w *wallet.Wallet, coinSelectKeyScope *waddrmgr.KeyScope,
-	account uint32, outputs []*wire.TxOut, minconf int32,
-	satPerKb btcutil.Amount, coinSelectionStrategy wallet.CoinSelectionStrategy,
-	dryRun bool, redemptionId uint32, optFuncs ...wallet.TxCreateOption) (*txauthor.AuthoredTx, error) {
+func (w *Wallet) CreateTxWithRedemptionIdAndCheckDoubleSpend(start, end *BlockIdentifier, redemptionId uint32,
+	coinSelectKeyScope *waddrmgr.KeyScope, account uint32, outputs []*wire.TxOut, minconf int32,
+	satPerKb btcutil.Amount, coinSelectionStrategy CoinSelectionStrategy,
+	dryRun bool, optFuncs ...TxCreateOption) (*txauthor.AuthoredTx, error) {
 
-	spent, hash, err := IsAlreadySpent(w, redemptionId, nil, nil)
+	spent, hash, err := w.IsRedemptionAlreadySpent(redemptionId, start, end)
 
 	if err != nil {
 		return nil, err
@@ -29,7 +28,7 @@ func CreateSimpleTxWithRedemptionId(w *wallet.Wallet, coinSelectKeyScope *waddrm
 
 	return w.CreateSimpleTxWithRedemptionId(coinSelectKeyScope, account, outputs, minconf, satPerKb, coinSelectionStrategy, dryRun, redemptionId, optFuncs...)
 }
-func IsAlreadySpent(w *wallet.Wallet, redemptionId uint32, start *wallet.BlockIdentifier, end *wallet.BlockIdentifier) (bool, chainhash.Hash, error) {
+func (w *Wallet) IsRedemptionAlreadySpent(redemptionId uint32, start, end *BlockIdentifier) (bool, chainhash.Hash, error) {
 
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
@@ -40,23 +39,23 @@ func IsAlreadySpent(w *wallet.Wallet, redemptionId uint32, start *wallet.BlockId
 	}
 
 	for _, block := range gtr.MinedTransactions {
-		isPresent, hash, err := isRedemptionIdPresent(w, redemptionId, block.Transactions)
+		isPresent, hash, err := w.isRedemptionIdPresent(redemptionId, block.Transactions)
 		if isPresent {
 			return isPresent, hash, err
 		}
 	}
 
-	gtr, err = w.GetTransactions(wallet.NewBlockIdentifierFromHeight(-1), end, "", ctx.Done())
+	gtr, err = w.GetTransactions(NewBlockIdentifierFromHeight(-1), end, "", ctx.Done())
 	if err != nil {
 		return false, nilHash(), err
 	}
-	return isRedemptionIdPresent(w, redemptionId, gtr.UnminedTransactions)
+	return w.isRedemptionIdPresent(redemptionId, gtr.UnminedTransactions)
 }
 
-func isRedemptionIdPresent(w *wallet.Wallet, redemptionId uint32, txs []wallet.TransactionSummary) (bool, chainhash.Hash, error) {
+func (w *Wallet) isRedemptionIdPresent(redemptionId uint32, txs []TransactionSummary) (bool, chainhash.Hash, error) {
 	for _, tx := range txs {
 		if tx.MyInputs != nil {
-			txDetails, _ := wallet.UnstableAPI(w).TxDetails(tx.Hash)
+			txDetails, _ := UnstableAPI(w).TxDetails(tx.Hash)
 			for _, input := range txDetails.MsgTx.TxIn {
 				if input.Sequence == redemptionId {
 					return true, txDetails.Hash, nil

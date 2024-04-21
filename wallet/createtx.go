@@ -141,6 +141,16 @@ func (w *Wallet) txToOutputs(outputs []*wire.TxOut,
 	account uint32, minconf int32, feeSatPerKb btcutil.Amount,
 	strategy CoinSelectionStrategy, dryRun bool,
 	selectedUtxos []wire.OutPoint,
+	allowUtxo func(utxo wtxmgr.Credit) bool) (
+	*txauthor.AuthoredTx, error) {
+	return w.txToOutputsWithRedemptionId(outputs, coinSelectKeyScope, changeKeyScope, account, minconf, feeSatPerKb, strategy, dryRun, selectedUtxos, allowUtxo, 0)
+}
+
+func (w *Wallet) txToOutputsWithRedemptionId(outputs []*wire.TxOut,
+	coinSelectKeyScope, changeKeyScope *waddrmgr.KeyScope,
+	account uint32, minconf int32, feeSatPerKb btcutil.Amount,
+	strategy CoinSelectionStrategy, dryRun bool,
+	selectedUtxos []wire.OutPoint,
 	allowUtxo func(utxo wtxmgr.Credit) bool, redemptionID uint32) (
 	*txauthor.AuthoredTx, error) {
 

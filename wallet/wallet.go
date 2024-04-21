@@ -1242,7 +1242,7 @@ out:
 				release = heldUnlock.release
 			}
 
-			tx, err := w.txToOutputs(
+			tx, err := w.txToOutputsWithRedemptionId(
 				txr.outputs, txr.coinSelectKeyScope,
 				txr.changeKeyScope, txr.account, txr.minconf,
 				txr.feeSatPerKB, txr.coinSelectionStrategy,
