@@ -48,7 +48,8 @@ func createTX(t *testing.T, w *Wallet) (*txauthor.AuthoredTx, error) {
 
 	var redemptionId uint32 = 1
 
-	return w.CreateTxWithRedemptionIdAndCheckDoubleSpend(NewBlockIdentifierFromHeight(0), NewBlockIdentifierFromHeight(testBlockHeight),
+	return w.CheckDoubleSpendAndCreateTxWithRedemptionId(
+		NewBlockIdentifierFromHeight(0), NewBlockIdentifierFromHeight(testBlockHeight),
 		redemptionId, &waddrmgr.KeyScopeBIP0049Plus, 0, []*wire.TxOut{getTxOut(t)}, 1, 100,
 		CoinSelectionLargest, false)
 }

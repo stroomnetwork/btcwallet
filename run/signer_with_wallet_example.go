@@ -51,7 +51,7 @@ func RunExample() {
 		return
 	}
 
-	simpleTx, err := w.CreateTxWithRedemptionIdAndCheckDoubleSpend(nil, nil, 3, &waddrmgr.KeyScopeBIP0086, accounts.Accounts[1].AccountNumber, []*wire.TxOut{txOut}, 1, 1000, wallet.CoinSelectionLargest, false)
+	simpleTx, err := w.CheckDoubleSpendAndCreateTxWithRedemptionId(nil, nil, 3, &waddrmgr.KeyScopeBIP0086, accounts.Accounts[1].AccountNumber, []*wire.TxOut{txOut}, 1, 1000, wallet.CoinSelectionLargest, false)
 	if err != nil {
 		log.Info(err)
 		return
@@ -62,7 +62,7 @@ func RunExample() {
 		return
 	}
 
-	/*spent, _, err := w.IsRedemptionAlreadySpent(2, wallet.NewBlockIdentifierFromHeight(1), wallet.NewBlockIdentifierFromHeight(8000))
+	/*spent, _, err := w.IsRedemptionIdAlreadySpent(2, wallet.NewBlockIdentifierFromHeight(1), wallet.NewBlockIdentifierFromHeight(8000))
 	if err != nil {
 		log.Info(err)
 		return

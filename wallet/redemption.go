@@ -11,45 +11,45 @@ import (
 	"time"
 )
 
-func (w *Wallet) CreateTxWithRedemptionIdAndCheckDoubleSpend(start, end *BlockIdentifier, redemptionId uint32,
+func (w *Wallet) CheckDoubleSpendAndCreateTxWithRedemptionId(start, end *BlockIdentifier, redemptionId uint32,
 	coinSelectKeyScope *waddrmgr.KeyScope, account uint32, outputs []*wire.TxOut, minconf int32,
 	satPerKb btcutil.Amount, coinSelectionStrategy CoinSelectionStrategy,
 	dryRun bool, optFuncs ...TxCreateOption) (*txauthor.AuthoredTx, error) {
 
-	spent, hash, err := w.IsRedemptionAlreadySpent(redemptionId, start, end)
+	isSpent, hash, err := w.IsRedemptionIdAlreadySpent(redemptionId, start, end)
 
 	if err != nil {
 		return nil, err
 	}
 
-	if spent {
+	if isSpent {
 		return nil, fmt.Errorf("redemption id %d already spent in tx %s", redemptionId, hash)
 	}
 
 	return w.CreateSimpleTxWithRedemptionId(coinSelectKeyScope, account, outputs, minconf, satPerKb, coinSelectionStrategy, dryRun, redemptionId, optFuncs...)
 }
-func (w *Wallet) IsRedemptionAlreadySpent(redemptionId uint32, start, end *BlockIdentifier) (bool, chainhash.Hash, error) {
+func (w *Wallet) IsRedemptionIdAlreadySpent(redemptionId uint32, start, end *BlockIdentifier) (bool, chainhash.Hash, error) {
 
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	gtr, err := w.GetTransactions(start, end, "", ctx.Done())
+	minedTx, err := w.GetTransactions(start, end, "", ctx.Done())
 	if err != nil {
 		return false, nilHash(), err
 	}
 
-	for _, block := range gtr.MinedTransactions {
+	for _, block := range minedTx.MinedTransactions {
 		isPresent, hash, err := w.isRedemptionIdPresent(redemptionId, block.Transactions)
 		if isPresent {
 			return isPresent, hash, err
 		}
 	}
 
-	gtr, err = w.GetTransactions(NewBlockIdentifierFromHeight(-1), end, "", ctx.Done())
+	unminedTx, err := w.GetTransactions(NewBlockIdentifierFromHeight(-1), end, "", ctx.Done())
 	if err != nil {
 		return false, nilHash(), err
 	}
-	return w.isRedemptionIdPresent(redemptionId, gtr.UnminedTransactions)
+	return w.isRedemptionIdPresent(redemptionId, unminedTx.UnminedTransactions)
 }
 
 func (w *Wallet) isRedemptionIdPresent(redemptionId uint32, txs []TransactionSummary) (bool, chainhash.Hash, error) {
