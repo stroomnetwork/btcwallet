@@ -18,19 +18,19 @@ func TestFrostSigning(t *testing.T) {
 
 	validators := frost.GetValidators(5, 3)
 	pubKey, err := validators[0].MakePubKey("test")
-	if err != nil {
-		log.Info(err)
-		return
-	}
+	assert.NoError(t, err)
+	assert.NotNil(t, pubKey)
 
 	w.FrostSigner = validators[0]
 	err = w.Unlock([]byte("world"), time.After(10*time.Minute))
 	assert.NoError(t, err)
+
 	err = w.ImportPublicKey(pubKey, waddrmgr.TaprootPubKey)
 	assert.NoError(t, err)
 
 	p2shAddr, err := txscript.PayToTaprootScript(pubKey)
 	assert.NoError(t, err)
+	assert.NotNil(t, p2shAddr)
 
 	incomingTx := &wire.MsgTx{
 		TxIn: []*wire.TxIn{
@@ -44,9 +44,17 @@ func TestFrostSigning(t *testing.T) {
 
 	addUtxo(t, w, incomingTx)
 
-	//addUtxoToWallet(t, w, waddrmgr.KeyScopeBIP0086)
+	accounts, err := w.Accounts(waddrmgr.KeyScopeBIP0086)
+	assert.NoError(t, err)
+	assert.NotNil(t, accounts)
+	assert.True(t, len(accounts.Accounts) > 1)
 
-	tx, err := w.CreateSimpleTx(&waddrmgr.KeyScopeBIP0086, 0, []*wire.TxOut{getTxOut(t)}, 1, 100, CoinSelectionLargest, false)
+	address, err := w.CurrentAddress(0, waddrmgr.KeyScopeBIP0044)
+	assert.NoError(t, err)
+
+	out := wire.NewTxOut(10000, address.ScriptAddress())
+
+	tx, err := w.CreateSimpleTx(&waddrmgr.KeyScopeBIP0086, accounts.Accounts[1].AccountNumber, []*wire.TxOut{out}, 1, 10, CoinSelectionLargest, false)
 	assert.NoError(t, err)
 	assert.NotNil(t, tx)
 
