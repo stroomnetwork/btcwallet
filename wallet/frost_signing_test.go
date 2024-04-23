@@ -58,5 +58,6 @@ func TestFrostSigning(t *testing.T) {
 	assert.NoError(t, err)
 	assert.NotNil(t, tx)
 
-	_ = w.PublishTransaction(tx.Tx, "")
+	err = w.PublishTransaction(tx.Tx, "")
+	assert.NoError(t, err)
 }
