@@ -62,13 +62,6 @@ func RunExample() {
 		return
 	}
 
-	/*spent, _, err := w.IsRedemptionIdAlreadySpent(2, wallet.NewBlockIdentifierFromHeight(1), wallet.NewBlockIdentifierFromHeight(8000))
-	if err != nil {
-		log.Info(err)
-		return
-	}
-	log.Info("Spend: ", spent)
-	*/
 	<-interruptHandlersDone
 	log.Info("Shutdown complete")
 }
