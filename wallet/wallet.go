@@ -11,6 +11,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/btcsuite/btcd/btcec/v2"
+	"github.com/stroomnetwork/frost/crypto"
 	"sort"
 	"sync"
 	"sync/atomic"
@@ -130,6 +131,10 @@ type Wallet struct {
 	Manager     *waddrmgr.Manager
 	TxStore     *wtxmgr.Store
 	FrostSigner frost.ISigner
+
+	btcAddrToEthAddr map[string]string
+	btcAddrToLc      map[string]*crypto.LinearCombination
+	pk1, pk2         *btcec.PublicKey
 
 	chainClient        chain.Interface
 	chainClientLock    sync.Mutex
