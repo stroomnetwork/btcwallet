@@ -24,7 +24,7 @@ func RunExample() {
 		return
 	}
 
-	w, err := RunWallet(validators[0])
+	w, err := RunWallet(validators[0], true)
 	if err != nil {
 		os.Exit(1)
 	}
@@ -51,7 +51,7 @@ func RunExample() {
 		return
 	}
 
-	simpleTx, err := w.CheckDoubleSpendAndCreateTxWithRedemptionId(nil, nil, 3, &waddrmgr.KeyScopeBIP0086, accounts.Accounts[1].AccountNumber, []*wire.TxOut{txOut}, 1, 1000, wallet.CoinSelectionLargest, false)
+	simpleTx, err := w.CheckDoubleSpendAndCreateTxWithRedemptionId(nil, nil, 4, &waddrmgr.KeyScopeBIP0086, accounts.Accounts[1].AccountNumber, []*wire.TxOut{txOut}, 1, 1000, wallet.CoinSelectionLargest, false)
 	if err != nil {
 		log.Info(err)
 		return
