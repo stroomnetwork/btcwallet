@@ -36,7 +36,6 @@ func RunExample() {
 	}
 
 	w.Unlock([]byte("passphrase"), time.After(10*time.Minute))
-	//_ = w.ImportPublicKey(pubKey, waddrmgr.TaprootPubKey)
 	_, err = w.ImportBtcAddressWithEthAddr("sb1pgdyx9mulkelunyg9rkj384sajls7xx2y3jlagdpup2l2wl6tppasvgf8z0", "0x7b3f4f4b3cCf7f3fDf3f3f3f3f3f3f3f3f3f3f3f")
 
 	f := false
