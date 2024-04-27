@@ -9,29 +9,29 @@ import (
 	"github.com/stroomnetwork/frost/crypto"
 )
 
-func (w *Wallet) ImportBtcAddressWithEthAddr(btcAddr, ethAddr string) error {
+func (w *Wallet) ImportBtcAddressWithEthAddr(btcAddr, ethAddr string) (*btcec.PublicKey, error) {
 
 	lc, err := w.lcFromEthAddr(ethAddr)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	pubKey := lc.GetCombinedPubKey()
 	importedAddress, err := w.ImportPublicKeyReturnAddress(pubKey, waddrmgr.TaprootPubKey)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	if btcAddr == "" && importedAddress != nil {
-		if importedAddress.Address().EncodeAddress() != btcAddr {
-			return fmt.Errorf("address mismatch: %s != %s", importedAddress, btcAddr)
+	if importedAddress != nil {
+		address := importedAddress.Address().EncodeAddress()
+		if btcAddr != "" && address != btcAddr {
+			return nil, fmt.Errorf("address mismatch: %s != %s", importedAddress, btcAddr)
 		}
+		w.btcAddrToLc[address] = lc
+		w.btcAddrToEthAddr[address] = ethAddr
 	}
 
-	w.btcAddrToLc[btcAddr] = lc
-	w.btcAddrToEthAddr[btcAddr] = ethAddr
-
-	return nil
+	return pubKey, nil
 }
 
 func (w *Wallet) lcFromEthAddr(ethAddrStr string) (*crypto.LinearCombination, error) {
