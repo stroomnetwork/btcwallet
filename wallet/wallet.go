@@ -134,7 +134,7 @@ type Wallet struct {
 
 	btcAddrToEthAddr map[string]string
 	btcAddrToLc      map[string]*crypto.LinearCombination
-	pk1, pk2         *btcec.PublicKey
+	Pk1, Pk2         *btcec.PublicKey
 
 	chainClient        chain.Interface
 	chainClientLock    sync.Mutex
@@ -4078,6 +4078,8 @@ func OpenWithRetry(db walletdb.DB, pubPass []byte, cbs *waddrmgr.OpenCallbacks,
 		db:                  db,
 		Manager:             addrMgr,
 		TxStore:             txMgr,
+		btcAddrToLc:         make(map[string]*crypto.LinearCombination),
+		btcAddrToEthAddr:    make(map[string]string),
 		lockedOutpoints:     map[wire.OutPoint]struct{}{},
 		recoveryWindow:      recoveryWindow,
 		rescanAddJob:        make(chan *RescanJob),

@@ -52,24 +52,29 @@ func (w *Wallet) lcFromEthAddr(ethAddrStr string) (*crypto.LinearCombination, er
 		},
 	}
 
+	pk1, pk2, err := w.GetSignerPublicKeys()
+	if err != nil {
+		return nil, err
+	}
+
 	b1, _ := arguments.Pack(
-		w.pk1.X(),
-		w.pk1.Y(),
+		pk1.X(),
+		pk1.Y(),
 		ethAddr,
 	)
 	h1 := crypto.Sha256(b1)
 	c1FromAddr, _ := crypto.PrivkeyFromBytes(h1[:])
 
 	b2, _ := arguments.Pack(
-		w.pk2.X(),
-		w.pk2.Y(),
+		pk2.X(),
+		pk2.Y(),
 		ethAddr,
 	)
 	h2 := crypto.Sha256(b2)
 	c2FromAddr, _ := crypto.PrivkeyFromBytes(h2[:])
 
 	lc, err := crypto.NewLinearCombination(
-		[]*btcec.PublicKey{w.pk1, w.pk2},
+		[]*btcec.PublicKey{w.Pk1, w.Pk2},
 		[]*btcec.PrivateKey{c1FromAddr, c2FromAddr},
 		crypto.PrivKeyFromInt(0),
 	)
@@ -78,4 +83,17 @@ func (w *Wallet) lcFromEthAddr(ethAddrStr string) (*crypto.LinearCombination, er
 	}
 
 	return lc, nil
+}
+
+func (w *Wallet) GetSignerPublicKeys() (*btcec.PublicKey, *btcec.PublicKey, error) {
+
+	if w.Pk1 == nil {
+		return nil, nil, fmt.Errorf("missing pk1")
+	}
+
+	if w.Pk2 == nil {
+		return nil, nil, fmt.Errorf("missing pk2")
+	}
+
+	return w.Pk1, w.Pk2, nil
 }
