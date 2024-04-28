@@ -177,8 +177,6 @@ func rpcClientConnectLoop(legacyRPCServer *legacyrpc.Server, loader *wallet.Load
 				log.Errorf("Couldn't start Neutrino client: %s", err)
 			}
 		} else {
-			// TODO init bitcoind client here
-
 			if bitcoindConfig != nil {
 				bitcoindConfig.ChainParams = activeNet.Params
 				chainClient, err = chain.SetupBitcoind(bitcoindConfig, true)
