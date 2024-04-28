@@ -1,7 +1,6 @@
 package chain
 
 import (
-	"github.com/btcsuite/btcd/chaincfg"
 	"os"
 	"time"
 )
@@ -47,11 +46,10 @@ func SetupBitcoind(cfg *BitcoindConfig, rpcPolling bool) (*BitcoindClient, error
 	return btcClient, nil
 }
 
-func NewBitcoindConfig(chainParams *chaincfg.Params, host, user, password string) *BitcoindConfig {
+func NewBitcoindConfig(host, user, password string) *BitcoindConfig {
 	return &BitcoindConfig{
-		ChainParams: chainParams,
-		Host:        host,
-		User:        user,
-		Pass:        password,
+		Host: host,
+		User: user,
+		Pass: password,
 	}
 }
