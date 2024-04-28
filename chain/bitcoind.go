@@ -1,7 +1,6 @@
 package chain
 
 import (
-	"fmt"
 	"github.com/btcsuite/btcd/chaincfg"
 	"os"
 	"time"
@@ -9,7 +8,7 @@ import (
 
 // SetupBitcoind starts up a bitcoind node with either a zmq connection or
 // rpc polling connection and returns a client wrapper of this connection.
-func SetupBitcoind(rpcPolling bool) (*BitcoindClient, error) {
+func SetupBitcoind(cfg *BitcoindConfig, rpcPolling bool) (*BitcoindClient, error) {
 
 	tempBitcoindDir, err := os.MkdirTemp("", "bitcoind")
 	if err != nil {
@@ -18,19 +17,6 @@ func SetupBitcoind(rpcPolling bool) (*BitcoindClient, error) {
 
 	zmqBlockHost := "ipc://" + tempBitcoindDir + "/blocks.socket"
 	zmqTxHost := "ipc://" + tempBitcoindDir + "/tx.socket"
-
-	rpcPort := 38443
-	host := fmt.Sprintf("127.0.0.1:%d", rpcPort)
-	cfg := &BitcoindConfig{
-		ChainParams: &chaincfg.RegressionNetParams,
-		Host:        host,
-		User:        "rpcuser",
-		Pass:        "rpcpassword",
-		// Fields only required for pruned nodes, not
-		// needed for these tests.
-		Dialer:             nil,
-		PrunedModeMaxPeers: 0,
-	}
 
 	if rpcPolling {
 		cfg.PollingConfig = &PollingConfig{
@@ -59,4 +45,13 @@ func SetupBitcoind(rpcPolling bool) (*BitcoindClient, error) {
 	}
 
 	return btcClient, nil
+}
+
+func NewBitcoindConfig(chainParams *chaincfg.Params, host, user, password string) *BitcoindConfig {
+	return &BitcoindConfig{
+		ChainParams: chainParams,
+		Host:        host,
+		User:        user,
+		Pass:        password,
+	}
 }

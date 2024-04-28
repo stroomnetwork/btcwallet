@@ -25,7 +25,7 @@ var (
 	cfg *config
 )
 
-func RunWallet(signer frost.ISigner, pk1, pk2 *btcec.PublicKey, isBitcoind bool) (*wallet.Wallet, error) {
+func InitWallet(signer frost.ISigner, pk1, pk2 *btcec.PublicKey, bitcoindConfig *chain.BitcoindConfig) (*wallet.Wallet, error) {
 	// Load configuration and parse command line.  This function also
 	// initializes logging and configures it accordingly.
 	tcfg, _, err := loadConfig()
@@ -70,7 +70,7 @@ func RunWallet(signer frost.ISigner, pk1, pk2 *btcec.PublicKey, isBitcoind bool)
 	// Create and start chain RPC client so it's ready to connect to
 	// the wallet when loaded later.
 	if !cfg.NoInitialLoad {
-		go rpcClientConnectLoop(legacyRPCServer, loader, isBitcoind)
+		go rpcClientConnectLoop(legacyRPCServer, loader, bitcoindConfig)
 	}
 
 	loader.RunAfterLoad(func(w *wallet.Wallet) {
@@ -132,7 +132,7 @@ func RunWallet(signer frost.ISigner, pk1, pk2 *btcec.PublicKey, isBitcoind bool)
 // The legacy RPC is optional.  If set, the connected RPC client will be
 // associated with the server for RPC passthrough and to enable additional
 // methods.
-func rpcClientConnectLoop(legacyRPCServer *legacyrpc.Server, loader *wallet.Loader, isBitcoind bool) {
+func rpcClientConnectLoop(legacyRPCServer *legacyrpc.Server, loader *wallet.Loader, bitcoindConfig *chain.BitcoindConfig) {
 	var certs []byte
 	if !cfg.UseSPV {
 		certs = readCAFile()
@@ -179,8 +179,8 @@ func rpcClientConnectLoop(legacyRPCServer *legacyrpc.Server, loader *wallet.Load
 		} else {
 			// TODO init bitcoind client here
 
-			if isBitcoind {
-				chainClient, err = chain.SetupBitcoind(true)
+			if bitcoindConfig != nil {
+				chainClient, err = chain.SetupBitcoind(bitcoindConfig, true)
 			} else {
 				chainClient, err = startChainRPC(certs)
 			}
