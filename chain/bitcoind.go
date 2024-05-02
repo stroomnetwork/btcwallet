@@ -4,8 +4,6 @@ import (
 	"time"
 )
 
-// SetupBitcoind starts up a bitcoind node with either a zmq connection or
-// rpc polling connection and returns a client wrapper of this connection.
 func SetupBitcoind(cfg *BitcoindConfig) (*BitcoindClient, error) {
 
 	cfg.PollingConfig = &PollingConfig{
