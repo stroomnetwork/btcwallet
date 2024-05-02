@@ -179,7 +179,7 @@ func rpcClientConnectLoop(legacyRPCServer *legacyrpc.Server, loader *wallet.Load
 		} else {
 			if bitcoindConfig != nil {
 				bitcoindConfig.ChainParams = activeNet.Params
-				chainClient, err = chain.SetupBitcoind(bitcoindConfig, true)
+				chainClient, err = chain.SetupBitcoind(bitcoindConfig)
 			} else {
 				chainClient, err = startChainRPC(certs)
 			}
