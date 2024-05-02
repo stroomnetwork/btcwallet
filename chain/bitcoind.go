@@ -6,17 +6,11 @@ import (
 
 func SetupBitcoind(cfg *BitcoindConfig) (*BitcoindClient, error) {
 
-	cfg.PollingConfig = &PollingConfig{
-		BlockPollingInterval: time.Millisecond * 100,
-		TxPollingInterval:    time.Millisecond * 100,
-	}
-
 	chainConn, err := NewBitcoindConn(cfg)
 	if err != nil {
 		return nil, err
 	}
 
-	// Create a bitcoind client.
 	btcClient := chainConn.NewBitcoindClient()
 	err = btcClient.Start()
 	if err != nil {
@@ -31,5 +25,10 @@ func NewBitcoindConfig(host, user, password string) *BitcoindConfig {
 		Host: host,
 		User: user,
 		Pass: password,
+
+		PollingConfig: &PollingConfig{
+			BlockPollingInterval: time.Millisecond * 100,
+			TxPollingInterval:    time.Millisecond * 100,
+		},
 	}
 }
