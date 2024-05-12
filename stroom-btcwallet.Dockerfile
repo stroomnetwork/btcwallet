@@ -7,6 +7,10 @@ RUN apt-get update && \
 RUN mkdir /stroom
 
 WORKDIR /stroom
+
+RUN pwd
+RUN ls -la
+
 COPY ./btcwallet /stroom
 # TODO Run container as non-root user with absolute minimum of permissions. See: https://www.redhat.com/en/blog/understanding-root-inside-and-outside-container
 ENTRYPOINT [ "/stroom/btcwallet" ]
