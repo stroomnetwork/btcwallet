@@ -1,0 +1,58 @@
+name: Deploy master
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - "*"
+
+env:
+  AWS_REGION: eu-north-1
+  ECS_CLUSTER: stroom-dev
+
+jobs:
+  build-images:
+    name: Deploy Stroom Btcwallet
+    runs-on: ubuntu-latest
+    outputs:
+      stroom-btcwallet: ${{ steps.build-image.outputs.stroom-btcwallet }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - uses: ./.github/actions/setup-git
+        with:
+          access-key: ${{ secrets.STROOM_REPOS_ACCESS_KEY }}
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.21.0'
+          cache: false
+      - uses: ./.github/actions/setup-cache
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Build binaries
+        run: make build-go
+
+      - name: Build & push images to Amazon ECR
+        id: build-image
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          IMAGE_TAG: v0.0.${{ github.run_number }}
+        # Build a docker container and push it to ECR so that it can be deployed to ECS.
+        run: |
+          docker build \
+            -t $ECR_REGISTRY/stroom-btcwallet:$IMAGE_TAG \
+            -t $ECR_REGISTRY/stroom-btcwallet:latest \
+            -f stroom-btcwallet.Dockerfile .
+
+          docker push $ECR_REGISTRY/stroom-btcwallet --all-tags
+
+          echo "stroom-btcwallet=$ECR_REGISTRY/stroom-btcwallet:$IMAGE_TAG" >> $GITHUB_OUTPUT

@@ -25,7 +25,7 @@ var (
 	cfg *config
 )
 
-func InitWallet(signer frost.ISigner, pk1, pk2 *btcec.PublicKey, bitcoindConfig *chain.BitcoindConfig) (*wallet.Wallet, error) {
+func InitWallet(signer frost.ISigner, pk1, pk2 *btcec.PublicKey) (*wallet.Wallet, error) {
 	// Load configuration and parse command line.  This function also
 	// initializes logging and configures it accordingly.
 	tcfg, _, err := loadConfig()
@@ -70,7 +70,7 @@ func InitWallet(signer frost.ISigner, pk1, pk2 *btcec.PublicKey, bitcoindConfig 
 	// Create and start chain RPC client so it's ready to connect to
 	// the wallet when loaded later.
 	if !cfg.NoInitialLoad {
-		go rpcClientConnectLoop(legacyRPCServer, loader, bitcoindConfig)
+		go rpcClientConnectLoop(legacyRPCServer, loader, getBitcoindConfig(cfg))
 	}
 
 	loader.RunAfterLoad(func(w *wallet.Wallet) {
@@ -123,6 +123,10 @@ func InitWallet(signer frost.ISigner, pk1, pk2 *btcec.PublicKey, bitcoindConfig 
 		}()
 	}
 	return w, nil
+}
+
+func getBitcoindConfig(c *config) *chain.BitcoindConfig {
+	return chain.NewBitcoindConfig(c.BitcoindRpcHost, c.BitcoindRpcUser, c.BitcoindRpcPassword)
 }
 
 // rpcClientConnectLoop continuously attempts a connection to the consensus RPC

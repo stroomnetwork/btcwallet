@@ -5,7 +5,6 @@ import (
 	"github.com/btcsuite/btcd/chaincfg"
 	"github.com/btcsuite/btcd/txscript"
 	"github.com/btcsuite/btcd/wire"
-	"github.com/stroomnetwork/btcwallet/chain"
 	"github.com/stroomnetwork/btcwallet/frost"
 	"github.com/stroomnetwork/btcwallet/waddrmgr"
 	"github.com/stroomnetwork/btcwallet/wallet"
@@ -31,7 +30,7 @@ func Example() {
 		return
 	}
 
-	w, err := InitWallet(validators[0], pk1, pk2, chain.NewBitcoindConfig("127.0.0.1:38332", "rpcuser", "rpcpassword"))
+	w, err := InitWallet(validators[0], pk1, pk2)
 	if err != nil {
 		os.Exit(1)
 	}

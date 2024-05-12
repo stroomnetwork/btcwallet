@@ -102,6 +102,9 @@ type config struct {
 	Username               string                  `short:"u" long:"username" description:"Username for legacy RPC and btcd authentication (if btcdusername is unset)"`
 	Password               string                  `short:"P" long:"password" default-mask:"-" description:"Password for legacy RPC and btcd authentication (if btcdpassword is unset)"`
 
+	BitcoindRpcHost     string `long:"bitcoind-host" description:"Bitcoind RPC host."`
+	BitcoindRpcUser     string `long:"bitcoind-user" description:"Bitcoind RPC user."`
+	BitcoindRpcPassword string `long:"bitcoind-password" description:"Bitcoind RPC password."`
 	// EXPERIMENTAL RPC server options
 	//
 	// These options will change (and require changes to config files, etc.)
@@ -357,6 +360,20 @@ func loadConfig() (*config, []string, error) {
 		if !cfg.RPCCert.ExplicitlySet() {
 			cfg.RPCCert.Value = filepath.Join(cfg.AppDataDir.Value, "rpc.cert")
 		}
+	}
+
+	if cfg.BitcoindRpcHost == "" {
+		return nil, nil, fmt.Errorf("bitcoind RPC host is required")
+	} else if !strings.Contains(cfg.BitcoindRpcHost, ":") {
+		return nil, nil, fmt.Errorf("should have port specified following ':'")
+	}
+
+	if cfg.BitcoindRpcUser == "" {
+		return nil, nil, fmt.Errorf("bitcoind RPC user is required")
+	}
+
+	if cfg.BitcoindRpcPassword == "" {
+		return nil, nil, fmt.Errorf("bitcoind RPC password is required")
 	}
 
 	// Choose the active network params based on the selected network.
