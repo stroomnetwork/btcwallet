@@ -49,9 +49,9 @@ jobs:
         # Build a docker container and push it to ECR so that it can be deployed to ECS.
         run: |
           docker build \
-            -t $ECR_REGISTRY/stroom-btcwallet:$IMAGE_TAG \
-            -t $ECR_REGISTRY/stroom-btcwallet:latest \
-            -f stroom-btcwallet.Dockerfile .
+            -t $ECR_REGISTRY/btcwallet:$IMAGE_TAG \
+            -t $ECR_REGISTRY/btcwallet:latest \
+            -f btcwallet.Dockerfile .
 
           docker push $ECR_REGISTRY/stroom-btcwallet --all-tags
 
