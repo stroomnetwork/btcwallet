@@ -39,7 +39,7 @@ jobs:
         uses: aws-actions/amazon-ecr-login@v2
 
       - name: Build binaries
-        run: make install
+        run: make build
 
       - name: Build & push images to Amazon ECR
         id: build-image

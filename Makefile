@@ -69,7 +69,7 @@ goimports:
 #? build: Compile and build btcwallet
 build:
 	@$(call print, "Compiling btcwallet.")
-	$(GOBUILD) $(PKG)/...
+	$(GOBUILD)
 
 #? install: Install btcwallet, dropwtxmgr and sweepaccount, place them in $GOPATH/bin
 install:
