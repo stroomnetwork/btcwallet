@@ -6,6 +6,8 @@ RUN apt-get update && \
 
 RUN mkdir /stroom
 
+RUN mkdir $GOPATH/bin
+
 WORKDIR /stroom
 
 COPY $GOPATH/bin/btcwallet /stroom
