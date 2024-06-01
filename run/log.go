@@ -11,7 +11,6 @@ import (
 	"github.com/lightninglabs/neutrino"
 	"github.com/stroomnetwork/btcwallet/chain"
 	"github.com/stroomnetwork/btcwallet/rpc/legacyrpc"
-	"github.com/stroomnetwork/btcwallet/rpc/rpcserver"
 	"github.com/stroomnetwork/btcwallet/wallet"
 	"io"
 	"os"
@@ -69,7 +68,7 @@ func init() {
 	wtxmgr.UseLogger(txmgrLog)
 	chain.UseLogger(chainLog)
 	rpcclient.UseLogger(chainLog)
-	rpcserver.UseLogger(grpcLog)
+	//rpcserver.UseLogger(grpcLog)
 	legacyrpc.UseLogger(legacyRPCLog)
 	neutrino.UseLogger(btcnLog)
 }
@@ -80,7 +79,7 @@ var subsystemLoggers = map[string]btclog.Logger{
 	"WLLT": walletLog,
 	"TMGR": txmgrLog,
 	"CHNS": chainLog,
-	//"GRPC": grpcLog,
+	"GRPC": grpcLog,
 	"RPCS": legacyRPCLog,
 	"BTCN": btcnLog,
 }
