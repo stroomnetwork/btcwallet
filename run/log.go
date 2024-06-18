@@ -6,6 +6,13 @@ package run
 
 import (
 	"fmt"
+	"github.com/btcsuite/btcd/rpcclient"
+	"github.com/btcsuite/btcwallet/wtxmgr"
+	"github.com/lightninglabs/neutrino"
+	"github.com/stroomnetwork/btcwallet/chain"
+	"github.com/stroomnetwork/btcwallet/rpc/legacyrpc"
+	"github.com/stroomnetwork/btcwallet/rpc/rpcserver"
+	"github.com/stroomnetwork/btcwallet/wallet"
 	"io"
 	"os"
 	"path/filepath"
@@ -58,13 +65,13 @@ var (
 
 // Initialize package-global logger variables.
 func init() {
-	/*wallet.UseLogger(walletLog)
+	wallet.UseLogger(walletLog)
 	wtxmgr.UseLogger(txmgrLog)
 	chain.UseLogger(chainLog)
 	rpcclient.UseLogger(chainLog)
 	rpcserver.UseLogger(grpcLog)
 	legacyrpc.UseLogger(legacyRPCLog)
-	neutrino.UseLogger(btcnLog)*/
+	neutrino.UseLogger(btcnLog)
 }
 
 // subsystemLoggers maps each subsystem identifier to its associated logger.
