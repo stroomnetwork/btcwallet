@@ -25,6 +25,6 @@ func TestStorage(t *testing.T) {
 
 	t.Cleanup(func() {
 		storage2.store.Close()
-		_ = os.Remove(defaultStorageFilePath)
+		_ = os.Remove(DefaultStorageFileName)
 	})
 }

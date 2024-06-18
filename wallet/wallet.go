@@ -132,7 +132,6 @@ type Wallet struct {
 	FrostSigner frost.Signer
 
 	AddressMapStorage *AddressMapStorage
-	btcAddrToEthAddr  map[string]string
 	Pk1, Pk2          *btcec.PublicKey
 
 	chainClient        chain.Interface
@@ -4077,7 +4076,6 @@ func OpenWithRetry(db walletdb.DB, pubPass []byte, cbs *waddrmgr.OpenCallbacks,
 		db:                  db,
 		Manager:             addrMgr,
 		TxStore:             txMgr,
-		btcAddrToEthAddr:    make(map[string]string),
 		lockedOutpoints:     map[wire.OutPoint]struct{}{},
 		recoveryWindow:      recoveryWindow,
 		rescanAddJob:        make(chan *RescanJob),

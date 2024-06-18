@@ -91,7 +91,7 @@ func InitWallet(signer frost.Signer, pk1, pk2 *btcec.PublicKey, bitcoindConfig *
 		w.Pk1 = pk1
 		w.Pk2 = pk2
 
-		storage, err := wallet.NewAddressMapStorage(cfg.AppDataDir.Value + "/addressMap.gkv")
+		storage, err := wallet.NewAddressMapStorage(cfg.AppDataDir.Value + "/" + wallet.DefaultStorageFileName)
 		if err != nil {
 			log.Error(err)
 			return nil, err

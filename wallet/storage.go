@@ -8,7 +8,7 @@ import (
 	"sync"
 )
 
-const defaultStorageFilePath = "addressMap.gkv"
+const DefaultStorageFileName = "addressMap.gkv"
 const collectionName = "ethAddress"
 
 type AddressMapStorage struct {
@@ -19,7 +19,7 @@ type AddressMapStorage struct {
 // NewAddressMapStorage creates a new storage instance using gkvlite with file path param
 func NewAddressMapStorage(storageFilePath string) (*AddressMapStorage, error) {
 	if storageFilePath == "" {
-		storageFilePath = defaultStorageFilePath
+		storageFilePath = DefaultStorageFileName
 	}
 
 	// Open the storage file

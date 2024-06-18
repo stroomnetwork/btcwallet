@@ -365,14 +365,15 @@ func getTaprootPubKeys(tx *txauthor.AuthoredTx, w *Wallet) (map[string]*crypto.L
 			}
 
 			for _, addr := range addrs {
-				ethAddr, ok := w.btcAddrToEthAddr[addr.String()]
-				if ok {
-					lc, err := w.lcFromEthAddr(ethAddr)
-					if err != nil {
-						return nil, err
-					}
-					linearCombinations[addr.String()] = lc
+				ethAddr, err := w.AddressMapStorage.GetEthAddress(addr.String())
+				if err != nil {
+					return nil, err
 				}
+				lc, err := w.lcFromEthAddr(ethAddr)
+				if err != nil {
+					return nil, err
+				}
+				linearCombinations[addr.String()] = lc
 			}
 		}
 	}
