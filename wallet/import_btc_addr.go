@@ -28,7 +28,7 @@ func (w *Wallet) ImportBtcAddressWithEthAddr(btcAddr, ethAddr string) (*btcec.Pu
 			return nil, fmt.Errorf("address mismatch: %s != %s",
 				importedAddress.Address().EncodeAddress(), btcAddr)
 		}
-		err := w.AddressMapStorage.SetEthAddress(btcAddr, ethAddr)
+		err := w.AddressMapStorage.SetEthAddress(address, ethAddr)
 		if err != nil {
 			return nil, err
 		}
