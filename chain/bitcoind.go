@@ -1,18 +1,24 @@
 package chain
 
 import (
+	"errors"
 	"time"
 )
 
 func SetupBitcoind(cfg *BitcoindConfig) (*BitcoindClient, error) {
 
-	chainConn, err := NewBitcoindConn(cfg)
-	if err != nil {
-		return nil, err
+	var chainConn *BitcoindConn
+	go func() {
+		chainConn, _ = NewBitcoindConn(cfg)
+	}()
+
+	time.Sleep(2 * time.Second)
+	if chainConn == nil {
+		return nil, errors.New("failed to connect to bitcoind")
 	}
 
 	btcClient := chainConn.NewBitcoindClient()
-	err = btcClient.Start()
+	err := btcClient.Start()
 	if err != nil {
 		return nil, err
 	}
