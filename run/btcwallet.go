@@ -5,6 +5,7 @@
 package run
 
 import (
+	"fmt"
 	"github.com/btcsuite/btcd/btcec/v2"
 	"github.com/stroomnetwork/frost"
 	"net"
@@ -30,7 +31,7 @@ var (
 func InitWallet(signer frost.Signer, pk1, pk2 *btcec.PublicKey,
 	bitcoindConfig *chain.BitcoindConfig) (*wallet.Wallet, error) {
 
-	tcfg, _, err := loadConfig()
+	tcfg, _, err := parseConfig()
 	if err != nil {
 		return nil, err
 	}
@@ -40,7 +41,13 @@ func InitWallet(signer frost.Signer, pk1, pk2 *btcec.PublicKey,
 // InitWalletWithConfig creates a new instance of the wallet with provided config
 func InitWalletWithConfig(signer frost.Signer, pk1, pk2 *btcec.PublicKey, bitcoindConfig *chain.BitcoindConfig,
 	walletConfig *Config) (*wallet.Wallet, error) {
+	err := loadConfig(walletConfig)
+	if err != nil {
+		fmt.Fprintln(os.Stderr, err)
+		return nil, err
+	}
 	cfg = walletConfig
+
 	defer func() {
 		if logRotator != nil {
 			logRotator.Close()
