@@ -25,14 +25,22 @@ var (
 	cfg *Config
 )
 
-func InitWallet(signer frost.Signer, pk1, pk2 *btcec.PublicKey, bitcoindConfig *chain.BitcoindConfig) (*wallet.Wallet, error) {
-	// Load configuration and parse command line.  This function also
-	// initializes logging and configures it accordingly.
+// InitWallet Load configuration and parse command line. This function also
+// initializes logging and configures it accordingly.
+func InitWallet(signer frost.Signer, pk1, pk2 *btcec.PublicKey,
+	bitcoindConfig *chain.BitcoindConfig) (*wallet.Wallet, error) {
+
 	tcfg, _, err := loadConfig()
 	if err != nil {
 		return nil, err
 	}
-	cfg = tcfg
+	return InitWalletWithConfig(signer, pk1, pk2, bitcoindConfig, tcfg)
+}
+
+// InitWalletWithConfig creates a new instance of the wallet with provided config
+func InitWalletWithConfig(signer frost.Signer, pk1, pk2 *btcec.PublicKey, bitcoindConfig *chain.BitcoindConfig,
+	walletConfig *Config) (*wallet.Wallet, error) {
+	cfg = walletConfig
 	defer func() {
 		if logRotator != nil {
 			logRotator.Close()
