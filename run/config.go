@@ -45,7 +45,7 @@ var (
 	defaultLogDir      = filepath.Join(defaultAppDataDir, defaultLogDirname)
 )
 
-type config struct {
+type Config struct {
 	// General application behavior
 	ConfigFile      *cfgutil.ExplicitString `short:"C" long:"configfile" description:"Path to configuration file"`
 	ShowVersion     bool                    `short:"V" long:"version" description:"Display version information and exit"`
@@ -257,9 +257,9 @@ func parseAndSetDebugLevels(debugLevel string) error {
 // The above results in btcwallet functioning properly without any config
 // settings while still allowing the user to override settings with config files
 // and command line options.  Command line options always take precedence.
-func loadConfig() (*config, []string, error) {
+func loadConfig() (*Config, []string, error) {
 	// Default config.
-	cfg := config{
+	cfg := Config{
 		DebugLevel:             defaultLogLevel,
 		ConfigFile:             cfgutil.NewExplicitString(defaultConfigFile),
 		AppDataDir:             cfgutil.NewExplicitString(defaultAppDataDir),

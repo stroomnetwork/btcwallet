@@ -22,7 +22,7 @@ import (
 )
 
 var (
-	cfg *config
+	cfg *Config
 )
 
 func InitWallet(signer frost.Signer, pk1, pk2 *btcec.PublicKey, bitcoindConfig *chain.BitcoindConfig) (*wallet.Wallet, error) {
