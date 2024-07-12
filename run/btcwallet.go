@@ -40,13 +40,13 @@ func InitWallet(signer frost.Signer, pk1, pk2 *btcec.PublicKey,
 
 // InitWalletWithConfig creates a new instance of the wallet with provided config
 func InitWalletWithConfig(signer frost.Signer, pk1, pk2 *btcec.PublicKey, bitcoindConfig *chain.BitcoindConfig,
-	walletConfig *Config) (*wallet.Wallet, error) {
-	err := loadConfig(walletConfig)
+	tcfg *Config) (*wallet.Wallet, error) {
+	err := loadConfig(tcfg)
 	if err != nil {
 		fmt.Fprintln(os.Stderr, err)
 		return nil, err
 	}
-	cfg = walletConfig
+	cfg = tcfg
 
 	defer func() {
 		if logRotator != nil {
