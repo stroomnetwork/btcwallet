@@ -268,7 +268,19 @@ func DefaultConfig() *Config {
 	}
 }
 
-func parseConfig() (*Config, []string, error) {
+// parseAndLoadConfig initializes and parses the config using a config file and command
+// line options.
+//
+// The configuration proceeds as follows:
+//  1. Start with a default config with sane settings
+//  2. Pre-parse the command line to check for an alternative config file
+//  3. Load configuration file overwriting defaults with any specified options
+//  4. Parse CLI options and overwrite/add any specified options
+//
+// The above results in btcwallet functioning properly without any config
+// settings while still allowing the user to override settings with config files
+// and command line options.  Command line options always take precedence.
+func parseAndLoadConfig() (*Config, []string, error) {
 	cfg := DefaultConfig()
 
 	// Pre-parse the command line options to see if an alternative config
@@ -326,6 +338,12 @@ func parseConfig() (*Config, []string, error) {
 		return nil, nil, err
 	}
 
+	err = loadConfig(cfg)
+	if err != nil {
+		fmt.Fprintln(os.Stderr, err)
+		return nil, nil, err
+	}
+
 	// Warn about missing config file after the final command line parse
 	// succeeds.  This prevents the warning on help messages and invalid
 	// options.
@@ -336,18 +354,6 @@ func parseConfig() (*Config, []string, error) {
 	return cfg, remainingArgs, nil
 }
 
-// loadConfig initializes and parses the config using a config file and command
-// line options.
-//
-// The configuration proceeds as follows:
-//  1. Start with a default config with sane settings
-//  2. Pre-parse the command line to check for an alternative config file
-//  3. Load configuration file overwriting defaults with any specified options
-//  4. Parse CLI options and overwrite/add any specified options
-//
-// The above results in btcwallet functioning properly without any config
-// settings while still allowing the user to override settings with config files
-// and command line options.  Command line options always take precedence.
 func loadConfig(cfg *Config) error {
 	funcName := "loadConfig"
 	// Check deprecated aliases.  The new options receive priority when both

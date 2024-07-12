@@ -31,21 +31,26 @@ var (
 func InitWallet(signer frost.Signer, pk1, pk2 *btcec.PublicKey,
 	bitcoindConfig *chain.BitcoindConfig) (*wallet.Wallet, error) {
 
-	tcfg, _, err := parseConfig()
+	tcfg, _, err := parseAndLoadConfig()
 	if err != nil {
 		return nil, err
 	}
-	return InitWalletWithConfig(signer, pk1, pk2, bitcoindConfig, tcfg)
+	return doInit(signer, pk1, pk2, bitcoindConfig, tcfg)
 }
 
 // InitWalletWithConfig creates a new instance of the wallet with provided config
 func InitWalletWithConfig(signer frost.Signer, pk1, pk2 *btcec.PublicKey, bitcoindConfig *chain.BitcoindConfig,
-	tcfg *Config) (*wallet.Wallet, error) {
-	err := loadConfig(tcfg)
+	walletConfig *Config) (*wallet.Wallet, error) {
+	err := loadConfig(walletConfig)
 	if err != nil {
 		fmt.Fprintln(os.Stderr, err)
 		return nil, err
 	}
+
+	return doInit(signer, pk1, pk2, bitcoindConfig, walletConfig)
+}
+
+func doInit(signer frost.Signer, pk1, pk2 *btcec.PublicKey, bitcoindConfig *chain.BitcoindConfig, tcfg *Config) (*wallet.Wallet, error) {
 	cfg = tcfg
 
 	defer func() {
