@@ -26,6 +26,23 @@ var (
 	cfg *Config
 )
 
+func SafeInitWallet(signer frost.Signer, pk1, pk2 *btcec.PublicKey, bitcoindConfig *chain.BitcoindConfig) (*wallet.Wallet, error) {
+	w, err := InitWallet(signer, pk1, pk2, bitcoindConfig)
+	if err != nil {
+		return nil, err
+	}
+
+	if w == nil {
+		return nil, fmt.Errorf("wallet is nil")
+	}
+	client := w.ChainClient()
+	if client == nil {
+		return nil, fmt.Errorf("chain client is nil")
+	}
+
+	return w, nil
+}
+
 // InitWallet Load configuration and parse command line. This function also
 // initializes logging and configures it accordingly.
 func InitWallet(signer frost.Signer, pk1, pk2 *btcec.PublicKey,
