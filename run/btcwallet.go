@@ -26,8 +26,20 @@ var (
 	cfg *Config
 )
 
-func SafeInitWallet(signer frost.Signer, pk1, pk2 *btcec.PublicKey, bitcoindConfig *chain.BitcoindConfig) (*wallet.Wallet, error) {
+func SafeInitWallet(signer frost.Signer, pk1, pk2 *btcec.PublicKey,
+	bitcoindConfig *chain.BitcoindConfig) (*wallet.Wallet, error) {
+
 	w, err := InitWallet(signer, pk1, pk2, bitcoindConfig)
+	return safeChecks(err, w)
+}
+
+func SafeInitWalletWithConfig(signer frost.Signer, pk1, pk2 *btcec.PublicKey, bitcoindConfig *chain.BitcoindConfig,
+	walletConfig *Config) (*wallet.Wallet, error) {
+	w, err := InitWalletWithConfig(signer, pk1, pk2, bitcoindConfig, walletConfig)
+	return safeChecks(err, w)
+}
+
+func safeChecks(err error, w *wallet.Wallet) (*wallet.Wallet, error) {
 	if err != nil {
 		return nil, err
 	}
