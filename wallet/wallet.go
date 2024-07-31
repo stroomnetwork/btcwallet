@@ -2535,6 +2535,31 @@ type GetTransactionResult struct {
 	Timestamp     int64
 }
 
+// GetTransactionDetails returns detailed data of a transaction given its id. In addition it
+// returns properties about its block.
+func (w *Wallet) GetTransactionDetails(txHash chainhash.Hash) (*wtxmgr.TxDetails, error) {
+	var res *wtxmgr.TxDetails
+	err := walletdb.View(w.db, func(dbtx walletdb.ReadTx) error {
+		txmgrNs := dbtx.ReadBucket(wtxmgrNamespaceKey)
+
+		res, err := w.TxStore.TxDetails(txmgrNs, &txHash)
+		if err != nil {
+			return err
+		}
+
+		// If the transaction was not found we return an error.
+		if res == nil {
+			return fmt.Errorf("%w: txid %v", ErrNoTx, txHash)
+		}
+
+		return nil
+	})
+	if err != nil {
+		return nil, err
+	}
+	return res, nil
+}
+
 // GetTransaction returns detailed data of a transaction given its id. In addition it
 // returns properties about its block.
 func (w *Wallet) GetTransaction(txHash chainhash.Hash) (*GetTransactionResult,
