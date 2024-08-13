@@ -2542,16 +2542,17 @@ func (w *Wallet) GetTransactionDetails(txHash chainhash.Hash) (*wtxmgr.TxDetails
 	err := walletdb.View(w.db, func(dbtx walletdb.ReadTx) error {
 		txmgrNs := dbtx.ReadBucket(wtxmgrNamespaceKey)
 
-		res, err := w.TxStore.TxDetails(txmgrNs, &txHash)
+		details, err := w.TxStore.TxDetails(txmgrNs, &txHash)
 		if err != nil {
 			return err
 		}
 
 		// If the transaction was not found we return an error.
-		if res == nil {
+		if details == nil {
 			return fmt.Errorf("%w: txid %v", ErrNoTx, txHash)
 		}
 
+		res = details
 		return nil
 	})
 	if err != nil {
