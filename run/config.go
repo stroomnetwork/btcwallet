@@ -64,7 +64,9 @@ type Config struct {
 	DBTimeout       time.Duration           `long:"dbtimeout" description:"The timeout value to use when opening the wallet database."`
 
 	// Wallet options
-	WalletPass string `long:"walletpass" default-mask:"-" description:"The public wallet password -- Only required if the wallet was created with one"`
+	WalletPrivatePass string `long:"walletprivatepass" default-mask:"-" description:"The private wallet passphrase"`
+	WalletPass        string `long:"walletpass" default-mask:"-" description:"The public wallet passphrase -- Only required if the wallet was created with one"`
+	WalletSeed        string `long:"walletseed" default-mask:"-" description:"The wallet seed"`
 
 	// RPC client options
 	RPCConnect       string                  `short:"c" long:"rpcconnect" description:"Hostname/IP and port of btcd RPC server to connect to (default localhost:8334, testnet: localhost:18334, simnet: localhost:18556)"`
@@ -252,6 +254,7 @@ func DefaultConfig() *Config {
 		AppDataDir:             cfgutil.NewExplicitString(defaultAppDataDir),
 		LogDir:                 defaultLogDir,
 		WalletPass:             wallet.InsecurePubPassphrase,
+		WalletSeed:             "",
 		CAFile:                 cfgutil.NewExplicitString(""),
 		RPCKey:                 cfgutil.NewExplicitString(defaultRPCKeyFile),
 		RPCCert:                cfgutil.NewExplicitString(defaultRPCCertFile),
@@ -518,7 +521,7 @@ func loadConfig(cfg *Config) error {
 		}
 
 		// Created successfully, so exit now with success.
-		os.Exit(0)
+		return nil
 	} else if !dbFileExists && !cfg.NoInitialLoad {
 		keystorePath := filepath.Join(netDir, keystore.Filename)
 		keystoreExists, err := cfgutil.FileExists(keystorePath)
