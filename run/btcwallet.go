@@ -137,15 +137,14 @@ func doInit(signer frost.Signer, pk1, pk2 *btcec.PublicKey, bitcoindConfig *chai
 		}
 
 		w.FrostSigner = signer
+		w.Pk1 = pk1
+		w.Pk2 = pk2
 
 		changeAddressKey, err := w.GenerateKeyFromEthAddressAndImport("0x7b3f4f4b3cCf7f3fDf3f3f3f3f3f3f3f3f3f3f3f")
 		if err != nil {
 			return nil, fmt.Errorf("cannot import change address: %w", err)
 		}
 		w.ChangeAddressKey = changeAddressKey
-
-		w.Pk1 = pk1
-		w.Pk2 = pk2
 
 		storage, err := wallet.NewAddressMapStorage(cfg.AppDataDir.Value + "/" + wallet.DefaultStorageFileName)
 		if err != nil {
