@@ -13,6 +13,7 @@ import (
 	_ "net/http/pprof" // nolint:gosec
 	"os"
 	"path/filepath"
+	"strings"
 	"sync"
 
 	"github.com/btcsuite/btcwallet/walletdb"
@@ -148,8 +149,7 @@ func doInit(signer frost.Signer, pk1, pk2 *btcec.PublicKey, bitcoindConfig *chai
 		w.AddressMapStorage = storage
 
 		changeAddressKey, err := w.GenerateKeyFromEthAddressAndImport("0x7b3f4f4b3cCf7f3fDf3f3f3f3f3f3f3f3f3f3f3f")
-		changeAddressKey, err = w.GenerateKeyFromEthAddressAndImport("0x7b3f4f4b3cCf7f3fDf3f3f3f3f3f3f3f3f3f3f3f")
-		if err != nil {
+		if err != nil && !strings.Contains(err.Error(), "already have address") {
 			return nil, fmt.Errorf("cannot import change address: %w", err)
 		}
 		w.ChangeAddressKey = changeAddressKey
