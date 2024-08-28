@@ -21,7 +21,6 @@ import (
 	flags "github.com/jessevdk/go-flags"
 	"github.com/lightninglabs/neutrino"
 	"github.com/stroomnetwork/btcwallet/cfgutil"
-	"github.com/stroomnetwork/btcwallet/internal/legacy/keystore"
 	"github.com/stroomnetwork/btcwallet/netparams"
 	"github.com/stroomnetwork/btcwallet/wallet"
 )
@@ -470,11 +469,6 @@ func loadConfig(cfg *Config) error {
 	netDir := networkDir(cfg.AppDataDir.Value, activeNet.Params)
 	dbPath := filepath.Join(netDir, wallet.WalletDBName)
 
-	if cfg.CreateTemp && cfg.Create {
-		return fmt.Errorf("the flags --create and --createtemp can not " +
-			"be specified together. Use --help for more information")
-	}
-
 	dbFileExists, err := cfgutil.FileExists(dbPath)
 	if err != nil {
 		return err
@@ -501,41 +495,23 @@ func loadConfig(cfg *Config) error {
 				return fmt.Errorf("unable to create wallet: %w", err)
 			}
 		}
-	} else if cfg.Create {
-		// Error if the create flag is set and the wallet already
-		// exists.
-		if dbFileExists {
-			return fmt.Errorf("the wallet database file `%v` "+
-				"already exists", dbPath)
-		}
+	} else {
+		// We consider create flag is always set and create the wallet whenever it does not exist
+		if !dbFileExists {
+			// Ensure the data directory for the network exists.
+			if err := checkCreateDir(netDir); err != nil {
+				return err
+			}
 
-		// Ensure the data directory for the network exists.
-		if err := checkCreateDir(netDir); err != nil {
-			return err
-		}
+			// Perform the initial wallet creation wizard.
+			if err := createWallet(cfg); err != nil {
 
-		// Perform the initial wallet creation wizard.
-		if err := createWallet(cfg); err != nil {
+				return fmt.Errorf("unable to create wallet: %w", err)
+			}
 
-			return fmt.Errorf("unable to create wallet: %w", err)
+			// Created successfully, so exit now with success.
+			return nil
 		}
-
-		// Created successfully, so exit now with success.
-		return nil
-	} else if !dbFileExists && !cfg.NoInitialLoad {
-		keystorePath := filepath.Join(netDir, keystore.Filename)
-		keystoreExists, err := cfgutil.FileExists(keystorePath)
-		if err != nil {
-			return err
-		}
-		if !keystoreExists {
-			err = fmt.Errorf("the wallet does not exist, run with " +
-				"the --create option to initialize and create it")
-		} else {
-			err = fmt.Errorf("the wallet is in legacy format, run " +
-				"with the --create option to import it")
-		}
-		return err
 	}
 
 	localhostListeners := map[string]struct{}{

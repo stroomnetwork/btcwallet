@@ -99,8 +99,6 @@ func convertLegacyKeystore(legacyKeyStore *keystore.Store, w *wallet.Wallet) {
 // and generates the wallet accordingly.  The new wallet will reside at the
 // provided path.
 func createWallet(cfg *Config) error {
-	funcName := "createWallet"
-
 	dbDir := networkDir(cfg.AppDataDir.Value, activeNet.Params)
 	loader := wallet.NewLoader(
 		activeNet.Params, dbDir, true, cfg.DBTimeout, 250,
@@ -124,15 +122,6 @@ func createWallet(cfg *Config) error {
 		legacyKeyStore, err = keystore.OpenDir(netDir)
 		if err != nil {
 			return err
-		}
-
-		if err = legacyKeyStore.Unlock(privPass); err != nil {
-			if err == keystore.ErrWrongPassphrase {
-				return fmt.Errorf("%s: Invalid private passphrase: %v", funcName, err)
-			}
-		}
-		if err != nil {
-			return fmt.Errorf("%s: Error unlocking keystore: %v", funcName, err)
 		}
 	}
 
