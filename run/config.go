@@ -52,6 +52,7 @@ type Config struct {
 	Create          bool                    `long:"create" description:"Create the wallet if it does not exist"`
 	CreateTemp      bool                    `long:"createtemp" description:"Create a temporary simulation wallet (pass=password) in the data directory indicated; must call with --datadir"`
 	AppDataDir      *cfgutil.ExplicitString `short:"A" long:"appdata" description:"Application data directory for wallet config, databases and logs"`
+	Regtest         bool                    `long:"regtest" description:"Use the test Bitcoin regtest network (default mainnet)"`
 	TestNet3        bool                    `long:"testnet" description:"Use the test Bitcoin network (version 3) (default mainnet)"`
 	SimNet          bool                    `long:"simnet" description:"Use the simulation test network (default mainnet)"`
 	SigNet          bool                    `long:"signet" description:"Use the signet test network (default mainnet)"`
@@ -385,6 +386,11 @@ func loadConfig(cfg *Config) error {
 	// Choose the active network params based on the selected network.
 	// Multiple networks can't be selected simultaneously.
 	numNets := 0
+	if cfg.Regtest {
+		activeNet = &netparams.RegtestParams
+		numNets++
+	}
+
 	if cfg.TestNet3 {
 		activeNet = &netparams.TestNet3Params
 		numNets++
