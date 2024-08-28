@@ -95,7 +95,7 @@ func convertLegacyKeystore(legacyKeyStore *keystore.Store, w *wallet.Wallet) {
 	}
 }
 
-// createWallet prompts the user for information needed to generate a new wallet
+// createWallet obtains information needed to generate a new wallet from config instead of prompting user
 // and generates the wallet accordingly.  The new wallet will reside at the
 // provided path.
 func createWallet(cfg *Config) error {

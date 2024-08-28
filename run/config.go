@@ -253,7 +253,6 @@ func DefaultConfig() *Config {
 		AppDataDir:             cfgutil.NewExplicitString(defaultAppDataDir),
 		LogDir:                 defaultLogDir,
 		WalletPass:             wallet.InsecurePubPassphrase,
-		WalletSeed:             "",
 		CAFile:                 cfgutil.NewExplicitString(""),
 		RPCKey:                 cfgutil.NewExplicitString(defaultRPCKeyFile),
 		RPCCert:                cfgutil.NewExplicitString(defaultRPCCertFile),
