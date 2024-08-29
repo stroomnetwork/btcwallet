@@ -508,11 +508,11 @@ func loadConfig(cfg *Config) error {
 				return err
 			}
 
-			log.Info("Starting wallet creation...")
+			fmt.Println("Starting wallet creation...")
 			if err := createWallet(cfg); err != nil {
 				return fmt.Errorf("unable to create wallet: %w", err)
 			}
-			log.Info("Finished wallet creation")
+			fmt.Println("Finished wallet creation")
 		}
 	}
 

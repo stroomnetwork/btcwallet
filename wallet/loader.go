@@ -253,6 +253,7 @@ func (l *Loader) createNewWallet(pubPassphrase, privPassphrase []byte,
 	}
 
 	if l.localDB {
+		fmt.Println("Creating wallet with local db", l.localDB)
 		dbPath := filepath.Join(l.dbDirPath, WalletDBName)
 
 		// Create the wallet database backed by bolt db.
@@ -286,7 +287,7 @@ func (l *Loader) createNewWallet(pubPassphrase, privPassphrase []byte,
 			return nil, err
 		}
 	}
-
+	fmt.Println("Creating wallet OpenWithRetry")
 	// Open the newly-created wallet.
 	w, err := OpenWithRetry(
 		l.db, pubPassphrase, nil, l.chainParams, l.recoveryWindow,
@@ -295,7 +296,7 @@ func (l *Loader) createNewWallet(pubPassphrase, privPassphrase []byte,
 	if err != nil {
 		return nil, err
 	}
-	w.Start()
+	fmt.Println("Creating wallet Start")
 
 	l.onLoaded(w)
 	return w, nil
@@ -334,9 +335,11 @@ func (l *Loader) OpenExistingWallet(pubPassphrase []byte,
 		// Open the database using the boltdb backend.
 		dbPath := filepath.Join(l.dbDirPath, WalletDBName)
 		fmt.Println("OpenExistingWallet 1 3")
-		l.db, err = walletdb.Open(
-			"bdb", dbPath, l.noFreelistSync, l.timeout,
-		)
+		if l.db == nil {
+			l.db, err = walletdb.Open(
+				"bdb", dbPath, l.noFreelistSync, l.timeout,
+			)
+		}
 		fmt.Println("OpenExistingWallet 1 4")
 		if err != nil {
 			log.Errorf("Failed to open database: %v", err)

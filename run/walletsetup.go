@@ -173,7 +173,7 @@ func createWallet(cfg *Config) error {
 		seed = []byte(cfg.WalletSeed)
 	}
 
-	log.Info("Creating the wallet...")
+	fmt.Println("Creating the wallet...")
 	w, err := loader.CreateNewWallet(pubPass, privPass, seed, time.Now())
 	if err != nil {
 		return err
