@@ -503,7 +503,7 @@ func loadConfig(cfg *Config) error {
 	} else {
 		// We consider create flag is always set and create the wallet whenever it does not exist
 		if !dbFileExists {
-			// Ensure the data directory for the network exists.
+			// Ensure the data directory for the specified network exists.
 			if err := checkCreateDir(netDir); err != nil {
 				return err
 			}
