@@ -513,9 +513,6 @@ func loadConfig(cfg *Config) error {
 
 				return fmt.Errorf("unable to create wallet: %w", err)
 			}
-
-			// Created successfully, so exit now with success.
-			return nil
 		}
 	}
 
