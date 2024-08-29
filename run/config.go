@@ -516,8 +516,6 @@ func loadConfig(cfg *Config) error {
 		}
 	}
 
-	log.Info("gogogog")
-
 	localhostListeners := map[string]struct{}{
 		"localhost": {},
 		"127.0.0.1": {},
@@ -578,6 +576,7 @@ func loadConfig(cfg *Config) error {
 		}
 	}
 
+	log.Info("go 1")
 	// Only set default RPC listeners when there are no listeners set for
 	// the experimental RPC server.  This is required to prevent the old RPC
 	// server from sharing listen addresses, since it is impossible to
@@ -595,6 +594,8 @@ func loadConfig(cfg *Config) error {
 		}
 	}
 
+	log.Info("go 2")
+
 	// Add default port to all rpc listener addresses if needed and remove
 	// duplicate addresses.
 	cfg.LegacyRPCListeners, err = cfgutil.NormalizeAddresses(
@@ -608,6 +609,7 @@ func loadConfig(cfg *Config) error {
 		return fmt.Errorf("invalid network address in RPC listeners: %w", err)
 	}
 
+	log.Info("go 3")
 	// Both RPC servers may not listen on the same interface/port.
 	if len(cfg.LegacyRPCListeners) > 0 && len(cfg.ExperimentalRPCListeners) > 0 {
 		seenAddresses := make(map[string]struct{}, len(cfg.LegacyRPCListeners))
@@ -624,6 +626,7 @@ func loadConfig(cfg *Config) error {
 		}
 	}
 
+	log.Info("go 4")
 	// Only allow server TLS to be disabled if the RPC server is bound to
 	// localhost addresses.
 	if cfg.DisableServerTLS {
@@ -644,7 +647,7 @@ func loadConfig(cfg *Config) error {
 			}
 		}
 	}
-
+	log.Info("go 5")
 	// Expand environment variable and leading ~ for filepaths.
 	cfg.CAFile.Value = cleanAndExpandPath(cfg.CAFile.Value)
 	cfg.RPCCert.Value = cleanAndExpandPath(cfg.RPCCert.Value)
@@ -661,5 +664,6 @@ func loadConfig(cfg *Config) error {
 		cfg.BtcdPassword = cfg.Password
 	}
 
+	log.Info("go 6")
 	return nil
 }
