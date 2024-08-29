@@ -313,7 +313,7 @@ func noConsole() ([]byte, error) {
 // canConsolePrompt will enables these prompts.
 func (l *Loader) OpenExistingWallet(pubPassphrase []byte,
 	canConsolePrompt bool) (*Wallet, error) {
-
+	log.Info("OpenExistingWallet 0")
 	defer l.mu.Unlock()
 	l.mu.Lock()
 
