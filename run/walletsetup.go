@@ -104,7 +104,7 @@ func createWallet(cfg *Config) error {
 	loader := wallet.NewLoader(
 		activeNet.Params, dbDir, true, cfg.DBTimeout, 250,
 	)
-	log.Info("loader created")
+
 	privPass := []byte(cfg.WalletPrivatePass)
 
 	// When there is a legacy keystore, open it now to ensure any errors
