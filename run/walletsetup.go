@@ -99,11 +99,12 @@ func convertLegacyKeystore(legacyKeyStore *keystore.Store, w *wallet.Wallet) {
 // and generates the wallet accordingly.  The new wallet will reside at the
 // provided path.
 func createWallet(cfg *Config) error {
+	log.Info("Starting wallet creation...")
 	dbDir := networkDir(cfg.AppDataDir.Value, activeNet.Params)
 	loader := wallet.NewLoader(
 		activeNet.Params, dbDir, true, cfg.DBTimeout, 250,
 	)
-
+	log.Info("loader created")
 	privPass := []byte(cfg.WalletPrivatePass)
 
 	// When there is a legacy keystore, open it now to ensure any errors
@@ -172,14 +173,14 @@ func createWallet(cfg *Config) error {
 		seed = []byte(cfg.WalletSeed)
 	}
 
-	fmt.Println("Creating the wallet...")
+	log.Info("Creating the wallet...")
 	w, err := loader.CreateNewWallet(pubPass, privPass, seed, time.Now())
 	if err != nil {
 		return err
 	}
 
 	w.Manager.Close()
-	fmt.Println("The wallet has been created successfully.")
+	log.Info("The wallet has been created successfully.")
 	return nil
 }
 

@@ -508,13 +508,15 @@ func loadConfig(cfg *Config) error {
 				return err
 			}
 
-			// Create the wallet using the initial wallet creation wizard.
+			log.Info("Starting wallet creation...")
 			if err := createWallet(cfg); err != nil {
-
 				return fmt.Errorf("unable to create wallet: %w", err)
 			}
+			log.Info("Finished wallet creation")
 		}
 	}
+
+	log.Info("gogogog")
 
 	localhostListeners := map[string]struct{}{
 		"localhost": {},
