@@ -264,6 +264,8 @@ func (l *Loader) createNewWallet(pubPassphrase, privPassphrase []byte,
 		l.db, err = walletdb.Create(
 			"bdb", dbPath, l.noFreelistSync, l.timeout,
 		)
+		defer func() { l.db.Close() }()
+
 		if err != nil {
 			return nil, err
 		}
