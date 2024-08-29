@@ -179,8 +179,7 @@ func createWallet(cfg *Config) error {
 		return err
 	}
 
-	w.Manager.Close()
-	log.Info("The wallet has been created successfully.")
+	log.Info("The wallet has been created successfully.", w.Manager)
 	return nil
 }
 
