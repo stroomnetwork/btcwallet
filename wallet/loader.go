@@ -313,14 +313,15 @@ func noConsole() ([]byte, error) {
 // canConsolePrompt will enables these prompts.
 func (l *Loader) OpenExistingWallet(pubPassphrase []byte,
 	canConsolePrompt bool) (*Wallet, error) {
-	log.Info("OpenExistingWallet 0")
+	fmt.Println("OpenExistingWallet 0")
+
 	defer l.mu.Unlock()
 	l.mu.Lock()
 
 	if l.wallet != nil {
 		return nil, ErrLoaded
 	}
-	log.Info("OpenExistingWallet 1")
+	fmt.Println("OpenExistingWallet 1")
 	if l.localDB {
 		var err error
 		// Ensure that the network directory exists.
@@ -339,7 +340,7 @@ func (l *Loader) OpenExistingWallet(pubPassphrase []byte,
 		}
 	}
 
-	log.Info("OpenExistingWallet 2")
+	fmt.Println("OpenExistingWallet 2")
 	var cbs *waddrmgr.OpenCallbacks
 	if canConsolePrompt {
 		cbs = &waddrmgr.OpenCallbacks{
@@ -352,12 +353,12 @@ func (l *Loader) OpenExistingWallet(pubPassphrase []byte,
 			ObtainPrivatePass: noConsole,
 		}
 	}
-	log.Info("OpenExistingWallet 3")
+	fmt.Println("OpenExistingWallet 3")
 	w, err := OpenWithRetry(
 		l.db, pubPassphrase, cbs, l.chainParams, l.recoveryWindow,
 		l.cfg.walletSyncRetryInterval,
 	)
-	log.Info("OpenExistingWallet 4")
+	fmt.Println("OpenExistingWallet 4")
 	if err != nil {
 		// If opening the wallet fails (e.g. because of wrong
 		// passphrase), we must close the backing database to
@@ -372,9 +373,9 @@ func (l *Loader) OpenExistingWallet(pubPassphrase []byte,
 		return nil, err
 	}
 	w.Start()
-	log.Info("OpenExistingWallet 5")
+	fmt.Println("OpenExistingWallet 5")
 	l.onLoaded(w)
-	log.Info("OpenExistingWallet 6")
+	fmt.Println("OpenExistingWallet 6")
 	return w, nil
 }
 
