@@ -325,15 +325,19 @@ func (l *Loader) OpenExistingWallet(pubPassphrase []byte,
 	if l.localDB {
 		var err error
 		// Ensure that the network directory exists.
+		fmt.Println("OpenExistingWallet 1 1")
 		if err = checkCreateDir(l.dbDirPath); err != nil {
 			return nil, err
 		}
+		fmt.Println("OpenExistingWallet 1 2")
 
 		// Open the database using the boltdb backend.
 		dbPath := filepath.Join(l.dbDirPath, WalletDBName)
+		fmt.Println("OpenExistingWallet 1 3")
 		l.db, err = walletdb.Open(
 			"bdb", dbPath, l.noFreelistSync, l.timeout,
 		)
+		fmt.Println("OpenExistingWallet 1 4")
 		if err != nil {
 			log.Errorf("Failed to open database: %v", err)
 			return nil, err
