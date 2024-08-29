@@ -71,7 +71,6 @@ func InitWallet(signer frost.Signer, pk1, pk2 *btcec.PublicKey,
 func InitWalletWithConfig(signer frost.Signer, pk1, pk2 *btcec.PublicKey, bitcoindConfig *chain.BitcoindConfig,
 	walletConfig *Config) (*wallet.Wallet, error) {
 	err := loadConfig(walletConfig)
-	log.Info("config loaded")
 	if err != nil {
 		log.Errorf("Error loading config: %v", err)
 		return nil, err
@@ -128,13 +127,10 @@ func doInit(signer frost.Signer, pk1, pk2 *btcec.PublicKey, bitcoindConfig *chai
 	})
 
 	var w *wallet.Wallet
-	log.Info("NoInitialLoad", cfg.NoInitialLoad)
 	if !cfg.NoInitialLoad {
 		// Load the wallet database.  It must have been created already
 		// or this will return an appropriate error.
-		log.Info("NoInitialLoad333")
 		w, err = loader.OpenExistingWallet([]byte(cfg.WalletPass), false)
-		log.Info("NoInitialLoad555")
 		if err != nil {
 			log.Error(err)
 			return nil, err

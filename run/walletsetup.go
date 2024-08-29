@@ -173,15 +173,12 @@ func createWallet(cfg *Config) error {
 		seed = []byte(cfg.WalletSeed)
 	}
 
-	fmt.Println("Creating the wallet...")
-	w, err := loader.CreateNewWallet(pubPass, privPass, seed, time.Now())
+	_, err = loader.CreateNewWallet(pubPass, privPass, seed, time.Now())
 	if err != nil {
 		return err
 	}
 
-	w.Manager.Close() // todo do we need to close it???
-
-	log.Info("The wallet has been created successfully.")
+	log.Info("The wallet has been created successfully")
 	return nil
 }
 

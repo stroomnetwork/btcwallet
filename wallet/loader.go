@@ -253,7 +253,6 @@ func (l *Loader) createNewWallet(pubPassphrase, privPassphrase []byte,
 	}
 
 	if l.localDB {
-		fmt.Println("Creating wallet with local db", l.localDB)
 		dbPath := filepath.Join(l.dbDirPath, WalletDBName)
 
 		// Create the wallet database backed by bolt db.
@@ -289,7 +288,6 @@ func (l *Loader) createNewWallet(pubPassphrase, privPassphrase []byte,
 			return nil, err
 		}
 	}
-	fmt.Println("Creating wallet OpenWithRetry")
 	// Open the newly-created wallet.
 	w, err := OpenWithRetry(
 		l.db, pubPassphrase, nil, l.chainParams, l.recoveryWindow,
@@ -298,7 +296,6 @@ func (l *Loader) createNewWallet(pubPassphrase, privPassphrase []byte,
 	if err != nil {
 		return nil, err
 	}
-	fmt.Println("Creating wallet Start")
 
 	l.onLoaded(w)
 	return w, nil
@@ -316,40 +313,30 @@ func noConsole() ([]byte, error) {
 // canConsolePrompt will enables these prompts.
 func (l *Loader) OpenExistingWallet(pubPassphrase []byte,
 	canConsolePrompt bool) (*Wallet, error) {
-	fmt.Println("OpenExistingWallet 0")
-
 	defer l.mu.Unlock()
 	l.mu.Lock()
 
 	if l.wallet != nil {
 		return nil, ErrLoaded
 	}
-	fmt.Println("OpenExistingWallet 1")
 	if l.localDB {
 		var err error
 		// Ensure that the network directory exists.
-		fmt.Println("OpenExistingWallet 1 1")
 		if err = checkCreateDir(l.dbDirPath); err != nil {
 			return nil, err
 		}
-		fmt.Println("OpenExistingWallet 1 2")
 
 		// Open the database using the boltdb backend.
 		dbPath := filepath.Join(l.dbDirPath, WalletDBName)
-		fmt.Println("OpenExistingWallet 1 3")
-		if l.db == nil {
-			l.db, err = walletdb.Open(
-				"bdb", dbPath, l.noFreelistSync, l.timeout,
-			)
-		}
-		fmt.Println("OpenExistingWallet 1 4")
+		l.db, err = walletdb.Open(
+			"bdb", dbPath, l.noFreelistSync, l.timeout,
+		)
 		if err != nil {
 			log.Errorf("Failed to open database: %v", err)
 			return nil, err
 		}
 	}
 
-	fmt.Println("OpenExistingWallet 2")
 	var cbs *waddrmgr.OpenCallbacks
 	if canConsolePrompt {
 		cbs = &waddrmgr.OpenCallbacks{
@@ -362,12 +349,11 @@ func (l *Loader) OpenExistingWallet(pubPassphrase []byte,
 			ObtainPrivatePass: noConsole,
 		}
 	}
-	fmt.Println("OpenExistingWallet 3")
 	w, err := OpenWithRetry(
 		l.db, pubPassphrase, cbs, l.chainParams, l.recoveryWindow,
 		l.cfg.walletSyncRetryInterval,
 	)
-	fmt.Println("OpenExistingWallet 4")
+
 	if err != nil {
 		// If opening the wallet fails (e.g. because of wrong
 		// passphrase), we must close the backing database to
@@ -382,9 +368,7 @@ func (l *Loader) OpenExistingWallet(pubPassphrase []byte,
 		return nil, err
 	}
 	w.Start()
-	fmt.Println("OpenExistingWallet 5")
 	l.onLoaded(w)
-	fmt.Println("OpenExistingWallet 6")
 	return w, nil
 }
 
