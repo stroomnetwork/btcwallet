@@ -508,7 +508,7 @@ func loadConfig(cfg *Config) error {
 				return err
 			}
 
-			// Perform the initial wallet creation wizard.
+			// Create the wallet using the initial wallet creation wizard.
 			if err := createWallet(cfg); err != nil {
 
 				return fmt.Errorf("unable to create wallet: %w", err)
