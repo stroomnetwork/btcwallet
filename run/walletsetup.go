@@ -178,6 +178,11 @@ func createWallet(cfg *Config) error {
 		return err
 	}
 
+	err = loader.UnloadWallet()
+	if err != nil {
+		return err
+	}
+
 	w.Manager.Close()
 	fmt.Println("The wallet has been created successfully.")
 	return nil
