@@ -198,7 +198,7 @@ func doInit(signer frost.Signer, pk1, pk2 *btcec.PublicKey, bitcoindConfig *chai
 }
 
 func waitForChainClientInitialized(wallet *wallet.Wallet) error {
-	ctx, cancel := context.WithTimeout(context.Background(), 12*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 120*time.Second)
 	defer cancel()
 
 	ticker := time.NewTicker(100 * time.Millisecond)
@@ -269,13 +269,10 @@ func rpcClientConnectLoop(legacyRPCServer *legacyrpc.Server, loader *wallet.Load
 				log.Errorf("Couldn't start Neutrino client: %s", err)
 			}
 		} else {
-			log.Info("Trying to connect 1")
 			if bitcoindConfig != nil {
-				log.Info("Trying to connect 2")
 				bitcoindConfig.ChainParams = activeNet.Params
 				chainClient, err = chain.SetupBitcoind(bitcoindConfig)
 			} else {
-				log.Info("Trying to connect 3")
 				chainClient, err = startChainRPC(certs)
 			}
 			if err != nil {
