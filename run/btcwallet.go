@@ -198,7 +198,7 @@ func doInit(signer frost.Signer, pk1, pk2 *btcec.PublicKey, bitcoindConfig *chai
 }
 
 func waitForChainClientInitialized(wallet *wallet.Wallet) error {
-	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 12*time.Second)
 	defer cancel()
 
 	ticker := time.NewTicker(100 * time.Millisecond)
