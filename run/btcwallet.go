@@ -269,10 +269,13 @@ func rpcClientConnectLoop(legacyRPCServer *legacyrpc.Server, loader *wallet.Load
 				log.Errorf("Couldn't start Neutrino client: %s", err)
 			}
 		} else {
+			log.Info("Trying to connect 1")
 			if bitcoindConfig != nil {
+				log.Info("Trying to connect 2")
 				bitcoindConfig.ChainParams = activeNet.Params
 				chainClient, err = chain.SetupBitcoind(bitcoindConfig)
 			} else {
+				log.Info("Trying to connect 3")
 				chainClient, err = startChainRPC(certs)
 			}
 			if err != nil {
@@ -356,8 +359,12 @@ func startChainRPC(certs []byte) (*chain.RPCClient, error) {
 	rpcc, err := chain.NewRPCClient(activeNet.Params, cfg.RPCConnect,
 		cfg.BtcdUsername, cfg.BtcdPassword, certs, cfg.DisableClientTLS, 0)
 	if err != nil {
+		log.Errorf("RPC client create failed: %v", err)
 		return nil, err
 	}
 	err = rpcc.Start()
+	if err != nil {
+		log.Errorf("RPC client start failed: %v", err)
+	}
 	return rpcc, err
 }
