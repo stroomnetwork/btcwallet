@@ -40,6 +40,19 @@ type BtcwalletConfig struct {
 	initTimeout    time.Duration
 }
 
+func NewBtcwalletConfig(signer frost.Signer, pk1, pk2 *btcec.PublicKey, bitcoindConfig *chain.BitcoindConfig,
+	config *Config, initTimeout time.Duration) *BtcwalletConfig {
+
+	return &BtcwalletConfig{
+		signer:         signer,
+		pk1:            pk1,
+		pk2:            pk2,
+		bitcoindConfig: bitcoindConfig,
+		config:         config,
+		initTimeout:    initTimeout,
+	}
+}
+
 func SafeInitWallet(config *BtcwalletConfig) (*wallet.Wallet, error) {
 	w, err := InitWallet(config)
 	return safeChecks(err, w)
