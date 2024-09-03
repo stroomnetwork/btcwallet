@@ -6,6 +6,7 @@ package run
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"github.com/btcsuite/btcd/btcec/v2"
 	"github.com/stroomnetwork/frost"
@@ -31,16 +32,21 @@ var (
 	cfg *Config
 )
 
-func SafeInitWallet(signer frost.Signer, pk1, pk2 *btcec.PublicKey,
-	bitcoindConfig *chain.BitcoindConfig) (*wallet.Wallet, error) {
+type BtcwalletConfig struct {
+	signer         frost.Signer
+	pk1, pk2       *btcec.PublicKey
+	bitcoindConfig *chain.BitcoindConfig
+	config         *Config
+	initTimeout    time.Duration
+}
 
-	w, err := InitWallet(signer, pk1, pk2, bitcoindConfig)
+func SafeInitWallet(config *BtcwalletConfig) (*wallet.Wallet, error) {
+	w, err := InitWallet(config)
 	return safeChecks(err, w)
 }
 
-func SafeInitWalletWithConfig(signer frost.Signer, pk1, pk2 *btcec.PublicKey, bitcoindConfig *chain.BitcoindConfig,
-	walletConfig *Config) (*wallet.Wallet, error) {
-	w, err := InitWalletWithConfig(signer, pk1, pk2, bitcoindConfig, walletConfig)
+func SafeInitWalletWithConfig(config *BtcwalletConfig) (*wallet.Wallet, error) {
+	w, err := InitWalletWithConfig(config)
 	return safeChecks(err, w)
 }
 
@@ -62,30 +68,33 @@ func safeChecks(err error, w *wallet.Wallet) (*wallet.Wallet, error) {
 
 // InitWallet Load configuration and parse command line. This function also
 // initializes logging and configures it accordingly.
-func InitWallet(signer frost.Signer, pk1, pk2 *btcec.PublicKey,
-	bitcoindConfig *chain.BitcoindConfig) (*wallet.Wallet, error) {
-
+func InitWallet(config *BtcwalletConfig) (*wallet.Wallet, error) {
 	tcfg, _, err := parseAndLoadConfig()
 	if err != nil {
 		return nil, err
 	}
-	return doInit(signer, pk1, pk2, bitcoindConfig, tcfg)
+	config.config = tcfg
+	return doInit(config)
 }
 
 // InitWalletWithConfig creates a new instance of the wallet with provided config
-func InitWalletWithConfig(signer frost.Signer, pk1, pk2 *btcec.PublicKey, bitcoindConfig *chain.BitcoindConfig,
-	walletConfig *Config) (*wallet.Wallet, error) {
-	err := loadConfig(walletConfig)
+func InitWalletWithConfig(config *BtcwalletConfig) (*wallet.Wallet, error) {
+	err := loadConfig(config.config)
 	if err != nil {
 		log.Errorf("Error loading config: %v", err)
 		return nil, err
 	}
 
-	return doInit(signer, pk1, pk2, bitcoindConfig, walletConfig)
+	return doInit(config)
 }
 
-func doInit(signer frost.Signer, pk1, pk2 *btcec.PublicKey, bitcoindConfig *chain.BitcoindConfig, tcfg *Config) (*wallet.Wallet, error) {
-	cfg = tcfg
+func doInit(config *BtcwalletConfig) (*wallet.Wallet, error) {
+	err := checkConfigForNil(config)
+	if err != nil {
+		return nil, err
+	}
+
+	cfg = config.config
 
 	defer func() {
 		if logRotator != nil {
@@ -124,7 +133,7 @@ func doInit(signer frost.Signer, pk1, pk2 *btcec.PublicKey, bitcoindConfig *chai
 	// Create and start chain RPC client so it's ready to connect to
 	// the wallet when loaded later.
 	if !cfg.NoInitialLoad {
-		go rpcClientConnectLoop(legacyRPCServer, loader, bitcoindConfig)
+		go rpcClientConnectLoop(legacyRPCServer, loader, config.bitcoindConfig)
 	}
 
 	loader.RunAfterLoad(func(w *wallet.Wallet) {
@@ -141,9 +150,9 @@ func doInit(signer frost.Signer, pk1, pk2 *btcec.PublicKey, bitcoindConfig *chai
 			return nil, err
 		}
 
-		w.FrostSigner = signer
-		w.Pk1 = pk1
-		w.Pk2 = pk2
+		w.FrostSigner = config.signer
+		w.Pk1 = config.pk1
+		w.Pk2 = config.pk2
 
 		storage, err := wallet.NewAddressMapStorage(cfg.AppDataDir.Value + "/" + wallet.DefaultStorageFileName)
 		if err != nil {
@@ -152,7 +161,7 @@ func doInit(signer frost.Signer, pk1, pk2 *btcec.PublicKey, bitcoindConfig *chai
 		}
 		w.AddressMapStorage = storage
 
-		err = waitForChainClientInitialized(w)
+		err = waitForChainClientInitialized(w, config.initTimeout)
 		if err != nil {
 			log.Error(err)
 			return nil, err
@@ -197,8 +206,27 @@ func doInit(signer frost.Signer, pk1, pk2 *btcec.PublicKey, bitcoindConfig *chai
 	return w, nil
 }
 
-func waitForChainClientInitialized(wallet *wallet.Wallet) error {
-	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+func checkConfigForNil(config *BtcwalletConfig) error {
+	if config.config == nil {
+		return errors.New("config is nil")
+	}
+	if config.signer == nil {
+		return errors.New("signer is nil")
+	}
+	if config.pk1 == nil {
+		return errors.New("pk1 is nil")
+	}
+	if config.pk2 == nil {
+		return errors.New("pk2 is nil")
+	}
+	if config.initTimeout == 0 {
+		config.initTimeout = 5 * time.Second
+	}
+	return nil
+}
+
+func waitForChainClientInitialized(wallet *wallet.Wallet, timeout time.Duration) error {
+	ctx, cancel := context.WithTimeout(context.Background(), timeout)
 	defer cancel()
 
 	ticker := time.NewTicker(100 * time.Millisecond)
