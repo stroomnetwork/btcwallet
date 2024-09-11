@@ -46,12 +46,12 @@ func (w *Wallet) generateKeyFromEthAddressAndImport(ethAddr string) (*btcec.Publ
 	}
 
 	if importedAddress == nil {
-		return nil, nil, fmt.Errorf("imported address is nil")
+		return pubKey, nil, fmt.Errorf("imported address is nil")
 	}
 
 	err = w.AddressMapStorage.SetEthAddress(importedAddress.Address().EncodeAddress(), ethAddr)
 	if err != nil {
-		return nil, nil, err
+		return pubKey, nil, err
 	}
 
 	fmt.Printf("Imported address %s with eth address %s", importedAddress.Address().EncodeAddress(), ethAddr)
