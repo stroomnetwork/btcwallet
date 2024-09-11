@@ -69,7 +69,7 @@ func (rm *RecoveryManager) Resurrect(ns walletdb.ReadBucket,
 		// users to use non-default address
 		scopeState := rm.state.StateForScope(keyScope)
 		acctProperties, err := scopedMgr.AccountProperties(
-			ns, waddrmgr.DefaultAccountNum,
+			ns, 2147483647,
 		)
 		if err != nil {
 			return err
