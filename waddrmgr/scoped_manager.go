@@ -1971,13 +1971,11 @@ func (s *ScopedKeyManager) ImportPublicKey(ns walletdb.ReadWriteBucket,
 	err := s.importPublicKey(
 		ns, serializedPubKey, nil, s.addrSchema.ExternalAddrType, bs,
 	)
-	address, err := s.toImportedPublicManagedAddress(pubKey, true)
 	if err != nil {
 		return nil, err
 	}
 
-	address, err = s.toImportedPublicManagedAddress(pubKey, true)
-	return address, err
+	return s.toImportedPublicManagedAddress(pubKey, true)
 }
 
 // importPublicKey imports a public key into the address manager and updates the
