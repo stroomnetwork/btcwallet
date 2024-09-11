@@ -42,7 +42,7 @@ func (w *Wallet) generateKeyFromEthAddressAndImport(ethAddr string) (*btcec.Publ
 	pubKey := lc.GetCombinedPubKey()
 	importedAddress, err := w.ImportPublicKeyReturnAddress(pubKey, waddrmgr.TaprootPubKey)
 	if err != nil {
-		return nil, nil, err
+		return pubKey, importedAddress, err
 	}
 
 	if importedAddress == nil {
