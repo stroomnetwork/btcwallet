@@ -1045,15 +1045,22 @@ func newFilterBlocksRequest(w *Wallet, batch []wtxmgr.BlockMeta, scopedMgrs map[
 	// sets belong to all currently tracked scopes.
 	for scope := range scopedMgrs {
 		scopeState := recoveryState.StateForScope(scope)
-		scopedIndex := waddrmgr.ScopedIndex{
-			Scope: scope,
-			Index: 0,
+
+		accounts, err := w.Accounts(waddrmgr.KeyScopeBIP0086)
+		if err == nil {
+			addrs, err := w.AccountAddresses(accounts.Accounts[1].AccountNumber)
+			if err == nil {
+				for _, addr := range addrs {
+					scopedIndex := waddrmgr.ScopedIndex{
+						Scope: scope,
+						Index: 0,
+					}
+					filterReq.ExternalAddrs[scopedIndex] = addr
+				}
+			}
+
 		}
 
-		address, err := btcutil.DecodeAddress("bcrt1pypacc6nl9d4fjnl06c2w7ugv9we847jdx5cfnss30hrsjqvankfsr8h8qv", w.ChainParams())
-		if err == nil {
-			filterReq.ExternalAddrs[scopedIndex] = address
-		}
 		for index, addr := range scopeState.InternalBranch.Addrs() {
 			scopedIndex := waddrmgr.ScopedIndex{
 				Scope: scope,
