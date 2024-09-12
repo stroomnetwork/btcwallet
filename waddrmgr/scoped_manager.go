@@ -2044,7 +2044,7 @@ func (s *ScopedKeyManager) importPublicKey(ns walletdb.ReadWriteBucket,
 	// Save the new imported address to the db and update start block (if
 	// needed) in a single transaction.
 	err = putImportedAddress(
-		ns, &s.scope, addressID, 0, ssNone,
+		ns, &s.scope, addressID, ImportedAddrAccount, ssNone,
 		encryptedPubKey, encryptedPrivKey,
 	)
 	if err != nil {
