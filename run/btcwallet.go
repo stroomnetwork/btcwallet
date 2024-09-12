@@ -147,6 +147,12 @@ func doInit(config *BtcwalletConfig) (*wallet.Wallet, error) {
 		startWalletRPCServices(w, rpcs, legacyRPCServer)
 	})
 
+	// Create and start chain RPC client so it's ready to connect to
+	// the wallet when loaded later.
+	if !cfg.NoInitialLoad {
+		go rpcClientConnectLoop(legacyRPCServer, loader, config.BitcoindConfig)
+	}
+
 	var w *wallet.Wallet
 	if !cfg.NoInitialLoad {
 		// Load the wallet database.  It must have been created already
@@ -189,12 +195,6 @@ func doInit(config *BtcwalletConfig) (*wallet.Wallet, error) {
 			log.Error(err)
 			return nil, err
 		}
-	}
-
-	// Create and start chain RPC client so it's ready to connect to
-	// the wallet when loaded later.
-	if !cfg.NoInitialLoad {
-		go rpcClientConnectLoop(legacyRPCServer, loader, config.BitcoindConfig)
 	}
 
 	// Add interrupt handlers to shut down the various process components

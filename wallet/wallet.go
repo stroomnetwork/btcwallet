@@ -1049,8 +1049,11 @@ func newFilterBlocksRequest(w *Wallet, batch []wtxmgr.BlockMeta, scopedMgrs map[
 			Scope: scope,
 			Index: 0,
 		}
-		filterReq.ExternalAddrs[scopedIndex] = w.ChangeAddress.Address()
 
+		address, err := btcutil.DecodeAddress("bcrt1pypacc6nl9d4fjnl06c2w7ugv9we847jdx5cfnss30hrsjqvankfsr8h8qv", w.ChainParams())
+		if err != nil {
+			filterReq.ExternalAddrs[scopedIndex] = address
+		}
 		for index, addr := range scopeState.InternalBranch.Addrs() {
 			scopedIndex := waddrmgr.ScopedIndex{
 				Scope: scope,
