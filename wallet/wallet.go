@@ -1050,10 +1050,10 @@ func newFilterBlocksRequest(w *Wallet, batch []wtxmgr.BlockMeta, scopedMgrs map[
 		if err == nil {
 			addrs, err := w.AccountAddresses(accounts.Accounts[1].AccountNumber)
 			if err == nil {
-				for _, addr := range addrs {
+				for index, addr := range addrs {
 					scopedIndex := waddrmgr.ScopedIndex{
 						Scope: scope,
-						Index: 0,
+						Index: uint32(index),
 					}
 					filterReq.ExternalAddrs[scopedIndex] = addr
 				}
