@@ -1815,8 +1815,8 @@ func putImportedAddress(ns walletdb.ReadWriteBucket, scope *KeyScope,
 
 	rawData := serializeImportedAddress(encryptedPubKey, encryptedPrivKey)
 	addrRow := dbAddressRow{
-		addrType:   adtChain,
-		account:    0,
+		addrType:   adtImport,
+		account:    account,
 		addTime:    uint64(time.Now().Unix()),
 		syncStatus: status,
 		rawData:    rawData,

@@ -11,7 +11,7 @@ import (
 
 func (w *Wallet) GenerateAndImportKeyWithCheck(btcAddr, ethAddr string) (*btcec.PublicKey, error) {
 
-	key, importedAddress, err := w.generateKeyFromEthAddressAndImport(ethAddr)
+	key, importedAddress, err := w.GenerateKeyFromEthAddressAndImport(ethAddr)
 	if err != nil {
 		return nil, err
 	}
@@ -27,12 +27,7 @@ func (w *Wallet) GenerateAndImportKeyWithCheck(btcAddr, ethAddr string) (*btcec.
 	return key, nil
 }
 
-func (w *Wallet) GenerateKeyFromEthAddressAndImport(ethAddr string) (*btcec.PublicKey, error) {
-	key, _, err := w.generateKeyFromEthAddressAndImport(ethAddr)
-	return key, err
-}
-
-func (w *Wallet) generateKeyFromEthAddressAndImport(ethAddr string) (*btcec.PublicKey, waddrmgr.ManagedAddress, error) {
+func (w *Wallet) GenerateKeyFromEthAddressAndImport(ethAddr string) (*btcec.PublicKey, waddrmgr.ManagedAddress, error) {
 
 	lc, err := w.lcFromEthAddr(ethAddr)
 	if err != nil {

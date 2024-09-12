@@ -131,6 +131,7 @@ type Wallet struct {
 	TxStore          *wtxmgr.Store
 	FrostSigner      frost.Signer
 	ChangeAddressKey *btcec.PublicKey
+	ChangeAddress    waddrmgr.ManagedAddress
 
 	AddressMapStorage *AddressMapStorage
 	Pk1, Pk2          *btcec.PublicKey
@@ -865,7 +866,7 @@ expandHorizons:
 	// construct the filter blocks request. The request includes the range
 	// of blocks we intend to scan, in addition to the scope-index -> addr
 	// map for all internal and external branches.
-	filterReq := newFilterBlocksRequest(batch, scopedMgrs, recoveryState)
+	filterReq := newFilterBlocksRequest(w, batch, scopedMgrs, recoveryState)
 
 	// Initiate the filter blocks request using our chain backend. If an
 	// error occurs, we are unable to proceed with the recovery.
@@ -1031,9 +1032,7 @@ func internalKeyPath(index uint32) waddrmgr.DerivationPath {
 
 // newFilterBlocksRequest constructs FilterBlocksRequests using our current
 // block range, scoped managers, and recovery state.
-func newFilterBlocksRequest(batch []wtxmgr.BlockMeta,
-	scopedMgrs map[waddrmgr.KeyScope]*waddrmgr.ScopedKeyManager,
-	recoveryState *RecoveryState) *chain.FilterBlocksRequest {
+func newFilterBlocksRequest(w *Wallet, batch []wtxmgr.BlockMeta, scopedMgrs map[waddrmgr.KeyScope]*waddrmgr.ScopedKeyManager, recoveryState *RecoveryState) *chain.FilterBlocksRequest {
 
 	filterReq := &chain.FilterBlocksRequest{
 		Blocks:           batch,
@@ -1046,13 +1045,12 @@ func newFilterBlocksRequest(batch []wtxmgr.BlockMeta,
 	// sets belong to all currently tracked scopes.
 	for scope := range scopedMgrs {
 		scopeState := recoveryState.StateForScope(scope)
-		for index, addr := range scopeState.ExternalBranch.Addrs() {
-			scopedIndex := waddrmgr.ScopedIndex{
-				Scope: scope,
-				Index: index,
-			}
-			filterReq.ExternalAddrs[scopedIndex] = addr
+		scopedIndex := waddrmgr.ScopedIndex{
+			Scope: scope,
+			Index: 0,
 		}
+		filterReq.ExternalAddrs[scopedIndex] = w.ChangeAddress.Address()
+
 		for index, addr := range scopeState.InternalBranch.Addrs() {
 			scopedIndex := waddrmgr.ScopedIndex{
 				Scope: scope,
