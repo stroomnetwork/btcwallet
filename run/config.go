@@ -48,7 +48,8 @@ type Config struct {
 	// General application behavior
 	ConfigFile      *cfgutil.ExplicitString `short:"C" long:"configfile" description:"Path to configuration file"`
 	ShowVersion     bool                    `short:"V" long:"version" description:"Display version information and exit"`
-	Create          bool                    `long:"create" description:"Create the wallet if it does not exist"`
+    CanConsolePrompt bool
+    Create          bool                    `long:"create" description:"Create the wallet if it does not exist"`
 	CreateTemp      bool                    `long:"createtemp" description:"Create a temporary simulation wallet (pass=password) in the data directory indicated; must call with --datadir"`
 	AppDataDir      *cfgutil.ExplicitString `short:"A" long:"appdata" description:"Application data directory for wallet config, databases and logs"`
 	Regtest         bool                    `long:"regtest" description:"Use the test Bitcoin regtest network (default mainnet)"`
@@ -66,7 +67,6 @@ type Config struct {
 	// Wallet options
 	WalletPrivatePass string `long:"walletprivatepass" default-mask:"-" description:"The private wallet passphrase"`
 	WalletPass        string `long:"walletpass" default-mask:"-" description:"The public wallet passphrase -- Only required if the wallet was created with one"`
-	WalletSeed        string `long:"walletseed" default-mask:"-" description:"The wallet seed"`
 
 	// RPC client options
 	RPCConnect       string                  `short:"c" long:"rpcconnect" description:"Hostname/IP and port of btcd RPC server to connect to (default localhost:8334, testnet: localhost:18334, simnet: localhost:18556)"`
@@ -253,6 +253,7 @@ func DefaultConfig() *Config {
 		ConfigFile:             cfgutil.NewExplicitString(defaultConfigFile),
 		AppDataDir:             cfgutil.NewExplicitString(defaultAppDataDir),
 		LogDir:                 defaultLogDir,
+        CanConsolePrompt:       true,
 		WalletPass:             wallet.InsecurePubPassphrase,
 		CAFile:                 cfgutil.NewExplicitString(""),
 		RPCKey:                 cfgutil.NewExplicitString(defaultRPCKeyFile),
@@ -495,7 +496,7 @@ func loadConfig(cfg *Config) error {
 		}
 
 		if !tempWalletExists {
-			// Perform the initial wallet creation wizard.
+			// Create the simulation wallet using provided config.
 			if err := createSimulationWallet(cfg); err != nil {
 				return fmt.Errorf("unable to create wallet: %w", err)
 			}
@@ -508,7 +509,7 @@ func loadConfig(cfg *Config) error {
 				return err
 			}
 
-			// Create the wallet using the initial wallet creation wizard.
+			// Create the wallet using the initial wallet creation wizard or provided config.
 			if err := createWallet(cfg); err != nil {
 				return fmt.Errorf("unable to create wallet: %w", err)
 			}
