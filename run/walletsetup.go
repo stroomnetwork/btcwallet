@@ -268,4 +268,3 @@ func checkCreateDir(path string) error {
 
 	return nil
 }
-
