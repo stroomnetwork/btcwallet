@@ -48,8 +48,8 @@ type Config struct {
 	// General application behavior
 	ConfigFile      *cfgutil.ExplicitString `short:"C" long:"configfile" description:"Path to configuration file"`
 	ShowVersion     bool                    `short:"V" long:"version" description:"Display version information and exit"`
-    CanConsolePrompt bool
-    Create          bool                    `long:"create" description:"Create the wallet if it does not exist"`
+    	CanConsolePrompt bool
+    	Create          bool                    `long:"create" description:"Create the wallet if it does not exist"`
 	CreateTemp      bool                    `long:"createtemp" description:"Create a temporary simulation wallet (pass=password) in the data directory indicated; must call with --datadir"`
 	AppDataDir      *cfgutil.ExplicitString `short:"A" long:"appdata" description:"Application data directory for wallet config, databases and logs"`
 	Regtest         bool                    `long:"regtest" description:"Use the test Bitcoin regtest network (default mainnet)"`
@@ -253,7 +253,7 @@ func DefaultConfig() *Config {
 		ConfigFile:             cfgutil.NewExplicitString(defaultConfigFile),
 		AppDataDir:             cfgutil.NewExplicitString(defaultAppDataDir),
 		LogDir:                 defaultLogDir,
-        CanConsolePrompt:       true,
+        	CanConsolePrompt:       true,
 		WalletPass:             wallet.InsecurePubPassphrase,
 		CAFile:                 cfgutil.NewExplicitString(""),
 		RPCKey:                 cfgutil.NewExplicitString(defaultRPCKeyFile),
