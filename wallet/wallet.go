@@ -22,7 +22,6 @@ import (
 	"github.com/btcsuite/btcd/btcutil/hdkeychain"
 	"github.com/btcsuite/btcd/chaincfg"
 	"github.com/btcsuite/btcd/chaincfg/chainhash"
-	"github.com/btcsuite/btcd/rpcclient"
 	"github.com/btcsuite/btcd/txscript"
 	"github.com/btcsuite/btcd/wire"
 	"github.com/btcsuite/btcwallet/wallet/txrules"
@@ -139,6 +138,8 @@ type Wallet struct {
 	chainClientLock    sync.Mutex
 	chainClientSynced  bool
 	chainClientSyncMtx sync.Mutex
+
+	newAddrMtx sync.Mutex
 
 	lockedOutpoints    map[wire.OutPoint]struct{}
 	lockedOutpointsMtx sync.Mutex
@@ -285,6 +286,8 @@ func (w *Wallet) quitChan() <-chan struct{} {
 
 // Stop signals all wallet goroutines to shutdown.
 func (w *Wallet) Stop() {
+	<-w.endRecovery()
+
 	w.quitMu.Lock()
 	quit := w.quit
 	w.quitMu.Unlock()
@@ -1400,6 +1403,23 @@ type (
 	heldUnlock chan struct{}
 )
 
+// endRecovery tells (*Wallet).recovery to stop, if running, and returns a
+// channel that will be closed when the recovery routine exits.
+func (w *Wallet) endRecovery() <-chan struct{} {
+	if recoverySyncI := w.recovering.Load(); recoverySyncI != nil {
+		recoverySync := recoverySyncI.(*recoverySyncer)
+
+		// If recovery is still running, it will end early with an error
+		// once we set the quit flag.
+		atomic.StoreUint32(&recoverySync.quit, 1)
+
+		return recoverySync.done
+	}
+	c := make(chan struct{})
+	close(c)
+	return c
+}
+
 // walletLocker manages the locked/unlocked state of a wallet.
 func (w *Wallet) walletLocker() {
 	var timeout <-chan time.Time
@@ -1492,19 +1512,7 @@ out:
 
 		// We can't lock the manager if recovery is active because we use
 		// cryptoKeyPriv and cryptoKeyScript in recovery.
-		if recoverySyncI := w.recovering.Load(); recoverySyncI != nil {
-			recoverySync := recoverySyncI.(*recoverySyncer)
-			// If recovery is still running, it will end early with an error
-			// once we set the quit flag.
-			atomic.StoreUint32(&recoverySync.quit, 1)
-
-			select {
-			case <-recoverySync.done:
-			case <-quit:
-				break out
-			}
-
-		}
+		<-w.endRecovery()
 
 		timeout = nil
 		err := w.Manager.Lock()
@@ -1714,6 +1722,15 @@ func (w *Wallet) CurrentAddress(account uint32, scope waddrmgr.KeyScope) (btcuti
 	if err != nil {
 		return nil, err
 	}
+
+	// The address manager uses OnCommit on the walletdb tx to update the
+	// in-memory state of the account state. But because the commit happens
+	// _after_ the account manager internal lock has been released, there
+	// is a chance for the address index to be accessed concurrently, even
+	// though the closure in OnCommit re-acquires the lock. To avoid this
+	// issue, we surround the whole address creation process with a lock.
+	w.newAddrMtx.Lock()
+	defer w.newAddrMtx.Unlock()
 
 	var (
 		addr  btcutil.Address
@@ -3201,6 +3218,15 @@ func (w *Wallet) NewAddress(account uint32,
 		return nil, err
 	}
 
+	// The address manager uses OnCommit on the walletdb tx to update the
+	// in-memory state of the account state. But because the commit happens
+	// _after_ the account manager internal lock has been released, there
+	// is a chance for the address index to be accessed concurrently, even
+	// though the closure in OnCommit re-acquires the lock. To avoid this
+	// issue, we surround the whole address creation process with a lock.
+	w.newAddrMtx.Lock()
+	defer w.newAddrMtx.Unlock()
+
 	var (
 		addr  btcutil.Address
 		props *waddrmgr.AccountProperties
@@ -3258,6 +3284,15 @@ func (w *Wallet) NewChangeAddress(account uint32,
 	if err != nil {
 		return nil, err
 	}
+
+	// The address manager uses OnCommit on the walletdb tx to update the
+	// in-memory state of the account state. But because the commit happens
+	// _after_ the account manager internal lock has been released, there
+	// is a chance for the address index to be accessed concurrently, even
+	// though the closure in OnCommit re-acquires the lock. To avoid this
+	// issue, we surround the whole address creation process with a lock.
+	w.newAddrMtx.Lock()
+	defer w.newAddrMtx.Unlock()
 
 	var addr btcutil.Address
 	err = walletdb.Update(w.db, func(tx walletdb.ReadWriteTx) error {
@@ -3851,25 +3886,18 @@ func (w *Wallet) publishTransaction(tx *wire.MsgTx) (*chainhash.Hash, error) {
 	}
 
 	txid := tx.TxHash()
-	_, err = chainClient.SendRawTransaction(tx, false)
-	if err == nil {
+	_, rpcErr := chainClient.SendRawTransaction(tx, false)
+	if rpcErr == nil {
 		return &txid, nil
 	}
 
-	// Map the error to an RPC-specific error type.
-	//
-	// NOTE: all the errors returned here are mapped to an error type
-	// defined in `rpcclient` package, where the error strings are taken
-	// from bitcoind.
-	rpcErr := rpcclient.MapRPCErr(err)
-
 	switch {
-	case errors.Is(rpcErr, rpcclient.ErrTxAlreadyInMempool):
+	case errors.Is(rpcErr, chain.ErrTxAlreadyInMempool):
 		log.Infof("%v: tx already in mempool", txid)
 		return &txid, nil
 
-	case errors.Is(rpcErr, rpcclient.ErrTxAlreadyKnown),
-		errors.Is(rpcErr, rpcclient.ErrTxAlreadyConfirmed):
+	case errors.Is(rpcErr, chain.ErrTxAlreadyKnown),
+		errors.Is(rpcErr, chain.ErrTxAlreadyConfirmed):
 
 		dbErr := walletdb.Update(w.db, func(dbTx walletdb.ReadWriteTx) error {
 			txmgrNs := dbTx.ReadWriteBucket(wtxmgrNamespaceKey)
