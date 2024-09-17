@@ -142,15 +142,15 @@ func doInit(config *BtcwalletConfig) (*wallet.Wallet, error) {
 		return nil, err
 	}
 
-	loader.RunAfterLoad(func(w *wallet.Wallet) {
-		startWalletRPCServices(w, rpcs, legacyRPCServer)
-	})
-
 	// Create and start chain RPC client so it's ready to connect to
 	// the wallet when loaded later.
 	if !cfg.NoInitialLoad {
 		go rpcClientConnectLoop(legacyRPCServer, loader, config.BitcoindConfig)
 	}
+
+	loader.RunAfterLoad(func(w *wallet.Wallet) {
+		startWalletRPCServices(w, rpcs, legacyRPCServer)
+	})
 
 	var w *wallet.Wallet
 	if !cfg.NoInitialLoad {
