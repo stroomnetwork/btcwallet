@@ -48,7 +48,6 @@ type Config struct {
 	// General application behavior
 	ConfigFile      *cfgutil.ExplicitString `short:"C" long:"configfile" description:"Path to configuration file"`
 	ShowVersion     bool                    `short:"V" long:"version" description:"Display version information and exit"`
-    	CanConsolePrompt bool
     	Create          bool                    `long:"create" description:"Create the wallet if it does not exist"`
 	CreateTemp      bool                    `long:"createtemp" description:"Create a temporary simulation wallet (pass=password) in the data directory indicated; must call with --datadir"`
 	AppDataDir      *cfgutil.ExplicitString `short:"A" long:"appdata" description:"Application data directory for wallet config, databases and logs"`
@@ -63,6 +62,9 @@ type Config struct {
 	LogDir          string                  `long:"logdir" description:"Directory to log output."`
 	Profile         string                  `long:"profile" description:"Enable HTTP profiling on given port -- NOTE port must be between 1024 and 65536"`
 	DBTimeout       time.Duration           `long:"dbtimeout" description:"The timeout value to use when opening the wallet database."`
+
+	// Feature flags used for fallback to the original implementation
+    	CanConsolePrompt bool `long:"canconsoleprompt" description:"Enable interaction with Stdin, wallet options are obtained from the configuration provided otherwise"`
 
 	// Wallet options
 	WalletPrivatePass string `long:"walletprivatepass" default-mask:"-" description:"The private wallet passphrase"`
@@ -496,7 +498,7 @@ func loadConfig(cfg *Config) error {
 		}
 
 		if !tempWalletExists {
-			// Create the simulation wallet using provided config.
+			// Create the wallet using provided config.
 			if err := createSimulationWallet(cfg); err != nil {
 				return fmt.Errorf("unable to create wallet: %w", err)
 			}
