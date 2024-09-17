@@ -189,7 +189,6 @@ func doInit(config *BtcwalletConfig) (*wallet.Wallet, error) {
 			return nil, fmt.Errorf("change key is nil")
 		}
 		w.ChangeAddressKey = changeAddressKey
-		w.ChangeAddress = changeAddress
 	}
 
 	// Add interrupt handlers to shut down the various process components

@@ -131,7 +131,6 @@ type Wallet struct {
 	TxStore          *wtxmgr.Store
 	FrostSigner      frost.Signer
 	ChangeAddressKey *btcec.PublicKey
-	ChangeAddress    waddrmgr.ManagedAddress
 
 	AddressMapStorage *AddressMapStorage
 	Pk1, Pk2          *btcec.PublicKey
