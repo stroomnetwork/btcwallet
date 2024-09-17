@@ -1030,6 +1030,19 @@ func internalKeyPath(index uint32) waddrmgr.DerivationPath {
 	}
 }
 
+func (w *Wallet) GetWalletAddresses() ([]btcutil.Address, error) {
+	accounts, err := w.Accounts(waddrmgr.KeyScopeBIP0086)
+	if err != nil {
+		return nil, err
+	}
+
+	if accounts == nil || len(accounts.Accounts) < 2 {
+		return nil, errors.New("no imported account")
+	}
+
+	return w.AccountAddresses(accounts.Accounts[1].AccountNumber)
+}
+
 // newFilterBlocksRequest constructs FilterBlocksRequests using our current
 // block range, scoped managers, and recovery state.
 func newFilterBlocksRequest(w *Wallet, batch []wtxmgr.BlockMeta, scopedMgrs map[waddrmgr.KeyScope]*waddrmgr.ScopedKeyManager, recoveryState *RecoveryState) *chain.FilterBlocksRequest {
@@ -1046,19 +1059,15 @@ func newFilterBlocksRequest(w *Wallet, batch []wtxmgr.BlockMeta, scopedMgrs map[
 	for scope := range scopedMgrs {
 		scopeState := recoveryState.StateForScope(scope)
 
-		accounts, err := w.Accounts(waddrmgr.KeyScopeBIP0086)
+		addresses, err := w.GetWalletAddresses()
 		if err == nil {
-			addrs, err := w.AccountAddresses(accounts.Accounts[1].AccountNumber)
-			if err == nil {
-				for index, addr := range addrs {
-					scopedIndex := waddrmgr.ScopedIndex{
-						Scope: scope,
-						Index: uint32(index),
-					}
-					filterReq.ExternalAddrs[scopedIndex] = addr
+			for index, addr := range addresses {
+				scopedIndex := waddrmgr.ScopedIndex{
+					Scope: scope,
+					Index: uint32(index),
 				}
+				filterReq.ExternalAddrs[scopedIndex] = addr
 			}
-
 		}
 
 		for index, addr := range scopeState.InternalBranch.Addrs() {

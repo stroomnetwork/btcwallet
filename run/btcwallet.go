@@ -8,7 +8,6 @@ import (
 	"context"
 	"fmt"
 	"github.com/btcsuite/btcd/btcec/v2"
-	"github.com/stroomnetwork/btcwallet/waddrmgr"
 	"github.com/stroomnetwork/frost"
 	"net"
 	"net/http"
@@ -184,17 +183,13 @@ func doInit(config *BtcwalletConfig) (*wallet.Wallet, error) {
 		if err != nil && !strings.Contains(err.Error(), "already exists") {
 			return nil, fmt.Errorf("cannot import change address: %w", err)
 		}
+		log.Infof("Change address: %s", changeAddress)
+
 		if changeAddressKey == nil {
 			return nil, fmt.Errorf("change key is nil")
 		}
 		w.ChangeAddressKey = changeAddressKey
 		w.ChangeAddress = changeAddress
-
-		accounts, err := w.Accounts(waddrmgr.KeyScopeBIP0086)
-		if err != nil && accounts == nil {
-			log.Error(err)
-			return nil, err
-		}
 	}
 
 	// Add interrupt handlers to shut down the various process components
