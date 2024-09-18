@@ -64,7 +64,7 @@ type Config struct {
 	DBTimeout       time.Duration           `long:"dbtimeout" description:"The timeout value to use when opening the wallet database."`
 
 	// Feature flags used for fallback to the original implementation
-    	CanConsolePrompt bool `long:"canconsoleprompt" description:"Enable interaction with Stdin, wallet options are obtained from the configuration provided otherwise"`
+	CanConsolePrompt bool `long:"canconsoleprompt" description:"Enable interaction with Stdin, wallet options are obtained from the configuration provided otherwise"`
 
 	// Wallet options
 	WalletPrivatePass string `long:"walletprivatepass" default-mask:"-" description:"The private wallet passphrase"`
@@ -255,7 +255,7 @@ func DefaultConfig() *Config {
 		ConfigFile:             cfgutil.NewExplicitString(defaultConfigFile),
 		AppDataDir:             cfgutil.NewExplicitString(defaultAppDataDir),
 		LogDir:                 defaultLogDir,
-        	CanConsolePrompt:       true,
+		CanConsolePrompt:       true,
 		WalletPass:             wallet.InsecurePubPassphrase,
 		CAFile:                 cfgutil.NewExplicitString(""),
 		RPCKey:                 cfgutil.NewExplicitString(defaultRPCKeyFile),
