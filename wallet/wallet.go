@@ -4188,7 +4188,7 @@ func (w *Wallet) GenerateKeyFromEthAddressAndImport(ethAddr string) (*btcec.Publ
 		return pubKey, nil, err
 	}
 
-	log.Infof("Imported address %s with eth address %s", importedAddress.Address(), ethAddr)
+	fmt.Printf("Imported address %s with eth address %s\n", importedAddress.Address(), ethAddr)
 
 	return pubKey, importedAddress, nil
 }
