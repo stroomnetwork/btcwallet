@@ -52,6 +52,9 @@ func makeInputSource(eligible []Coin) txauthor.InputSource {
 			)
 		}
 
+		log.Infof("currentTotal: %v, currentInputs: %v, currentInputValues: %v, currentScripts: %v",
+			currentTotal, currentInputs, currentInputValues, currentScripts)
+
 		return currentTotal, currentInputs, currentInputValues,
 			currentScripts, nil
 	}
@@ -78,7 +81,8 @@ func constantInputSource(eligible []wtxmgr.Credit) txauthor.InputSource {
 
 	return func(target btcutil.Amount) (btcutil.Amount, []*wire.TxIn,
 		[]btcutil.Amount, [][]byte, error) {
-
+		log.Infof("currentTotal: %v, currentInputs: %v, currentInputValues: %v, currentScripts: %v",
+			currentTotal, currentInputs, currentInputValues, currentScripts)
 		return currentTotal, currentInputs, currentInputValues,
 			currentScripts, nil
 	}
@@ -207,6 +211,7 @@ func (w *Wallet) txToOutputsWithRedemptionId(outputs []*wire.TxOut,
 						"not eligible for "+
 						"spending: %v", outpoint)
 				}
+				log.Infof("eligibleSelectedUtxo: %v", eligibleSelectedUtxo)
 				eligibleSelectedUtxo = append(
 					eligibleSelectedUtxo, e,
 				)
@@ -402,10 +407,12 @@ func (w *Wallet) findEligibleOutputs(dbtx walletdb.ReadTx,
 	for i := range unspent {
 		output := &unspent[i]
 
+		log.Infof("output: %v", output)
+
 		// Restrict the selected utxos if a filter function is provided.
 		if allowUtxo != nil &&
 			!allowUtxo(*output) {
-
+			log.Info("Restrict the selected utxos if a filter function is provided.")
 			continue
 		}
 
@@ -413,17 +420,22 @@ func (w *Wallet) findEligibleOutputs(dbtx walletdb.ReadTx,
 		// confirmations. Coinbase transactions must have reached
 		// maturity before their outputs may be spent.
 		if !confirmed(minconf, output.Height, bs.Height) {
+			log.Infof("tx not confirmed, minconf: %v, output height: %v, bs height: %v",
+				minconf, output.Height, bs.Height)
 			continue
 		}
 		if output.FromCoinBase {
 			target := int32(w.chainParams.CoinbaseMaturity)
 			if !confirmed(target, output.Height, bs.Height) {
+				log.Infof("output from coinbase not confirmer, target: %v, output height: %v, bs height: %v",
+					target, output.Height, bs.Height)
 				continue
 			}
 		}
 
 		// Locked unspent outputs are skipped.
 		if w.LockedOutpoint(output.OutPoint) {
+			log.Infof("locked unspent outputs are skipped")
 			continue
 		}
 
@@ -435,18 +447,23 @@ func (w *Wallet) findEligibleOutputs(dbtx walletdb.ReadTx,
 		_, addrs, _, err := txscript.ExtractPkScriptAddrs(
 			output.PkScript, w.chainParams)
 		if err != nil || len(addrs) != 1 {
+			log.Infof("error extracting pk script addrs: %v", err)
 			continue
 		}
 		scopedMgr, addrAcct, err := w.Manager.AddrAccount(addrmgrNs, addrs[0])
 		if err != nil {
+			log.Infof("error getting addr account: %v", err)
 			continue
 		}
 		if keyScope != nil && scopedMgr.Scope() != *keyScope {
+			log.Infof("key scope not match, scopedMgr: %v, keyScope: %v", scopedMgr.Scope(), *keyScope)
 			continue
 		}
 		if addrAcct != account {
+			log.Infof("addr account not match, addrAcct: %v, account: %v", addrAcct, account)
 			continue
 		}
+		log.Infof("eligible output: %v", output)
 		eligible = append(eligible, *output)
 	}
 	return eligible, nil
