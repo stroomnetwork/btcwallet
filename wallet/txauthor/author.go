@@ -144,7 +144,10 @@ func NewUnsignedTransaction(outputs []*wire.TxOut, feeRatePerKb btcutil.Amount,
 			continue
 		}
 
-		fmt.Printf("inputs: %v\n", inputs)
+		fmt.Printf("inputs size: %v\n", len(inputs))
+		for _, input := range inputs {
+			fmt.Printf("input: %v, amount: %v\n", input.PreviousOutPoint, inputAmount)
+		}
 
 		unsignedTransaction := &wire.MsgTx{
 			Version:  wire.TxVersion,
