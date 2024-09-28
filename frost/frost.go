@@ -103,7 +103,7 @@ func SetupInMemoryNetwork(k int, pubKeys []*btcec.PublicKey, privKeys []*btcec.P
 	bindingInfos := make([]frostConfig.BindingInfo, n)
 	for i := 0; i < n; i++ {
 		// bindingConfig contains information about the binding of this validator to the validators inMemoryNetwork.
-		bindingConfig := frostConfig.NewBindingConfig(privKeys[i], pubKeys, k)
+		bindingConfig := frostConfig.NewDefaultBindingConfig(privKeys[i], pubKeys, k)
 
 		// bi is the binding information of this validator.
 		// it is used for the generation of the bound keys which are the original keys modified with this specific inMemoryNetwork information)
