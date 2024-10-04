@@ -369,15 +369,11 @@ func spendTaprootKey(signer frost.Signer, linearCombinations map[string]*crypto.
 		return fmt.Errorf("key not found for address %v", addrs[0].String())
 	}
 
-	msd := &crypto.MultiSignatureDescriptor{
-		Data: data,
-		SignDescriptors: []*crypto.LinearSignDescriptor{
-			{
-				MsgHash: sigHash,
-				LC:      lc,
-			},
+	msd := crypto.NewMsd(data, crypto.NewTxData(pkScript, inputValue, tx, sigHashes, idx),
+		[]*crypto.LinearSignDescriptor{
+			crypto.NewLinearSignDescriptor(sigHash, lc),
 		},
-	}
+	)
 
 	signatures, err := signer.SignAdvanced(msd)
 	if err != nil {
