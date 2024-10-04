@@ -24,7 +24,7 @@ require (
 	github.com/lightningnetwork/lnd/ticker v1.0.0
 	github.com/lightningnetwork/lnd/tlv v1.0.2
 	github.com/stretchr/testify v1.8.4
-	github.com/stroomnetwork/frost v0.0.13-0.20241004062031-afc03c9f9986
+	github.com/stroomnetwork/frost v0.0.13-0.20241004065335-b6abd5faa5e4
 	golang.org/x/crypto v0.22.0
 	golang.org/x/net v0.24.0
 	golang.org/x/term v0.19.0
