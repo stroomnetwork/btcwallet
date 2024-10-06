@@ -6,6 +6,8 @@
 package txauthor
 
 import (
+	"bytes"
+	"encoding/gob"
 	"errors"
 	"fmt"
 	"github.com/btcsuite/btcd/btcutil"
@@ -369,11 +371,8 @@ func spendTaprootKey(signer frost.Signer, linearCombinations map[string]*crypto.
 		return fmt.Errorf("key not found for address %v", addrs[0].String())
 	}
 
-	msd := crypto.NewMsd(data,
-		crypto.NewTxData(pkScript, inputValue, tx, sigHashes, idx),
-		crypto.NewLinearSignDescriptors(sigHash, lc))
-
-	signatures, err := signer.SignAdvanced(msd)
+	signatureData := SerializeSignatureData(data, crypto.NewTxData(pkScript, inputValue, tx, sigHashes, idx))
+	signatures, err := signer.SignAdvanced(crypto.NewSingleMsdWithData(sigHash, lc, signatureData))
 	if err != nil {
 		return err
 	}
@@ -381,6 +380,41 @@ func spendTaprootKey(signer frost.Signer, linearCombinations map[string]*crypto.
 	txIn.Witness = wire.TxWitness{signatures[0].Serialize()}
 
 	return nil
+}
+
+type SignatureAndTxData struct {
+	Data   []byte
+	TxData *crypto.TxData
+}
+
+func NewAllDataTest(data []byte, txData *crypto.TxData) *SignatureAndTxData {
+	return &SignatureAndTxData{
+		Data:   data,
+		TxData: txData,
+	}
+}
+
+func SerializeSignatureData(data []byte, txData *crypto.TxData) []byte {
+	var buffer bytes.Buffer
+	encoder := gob.NewEncoder(&buffer)
+
+	err := encoder.Encode(NewAllDataTest(data, txData))
+	if err != nil {
+		fmt.Println("Error serializing:", err)
+		return nil
+	}
+
+	return buffer.Bytes()
+}
+
+func DeserializeSignatureData(data []byte) (*SignatureAndTxData, error) {
+	var signatureAndTxData SignatureAndTxData
+	decoder := gob.NewDecoder(bytes.NewBuffer(data))
+	err := decoder.Decode(&signatureAndTxData)
+	if err != nil {
+		return nil, err
+	}
+	return &signatureAndTxData, nil
 }
 
 // spendNestedWitnessPubKey generates both a sigScript, and valid witness for
