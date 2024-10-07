@@ -371,7 +371,11 @@ func spendTaprootKey(signer frost.Signer, linearCombinations map[string]*crypto.
 		return fmt.Errorf("key not found for address %v", addrs[0].String())
 	}
 
-	signatureData := SerializeSignatureData(data, crypto.NewTxData(pkScript, inputValue, tx, sigHashes, idx))
+	signatureData, err := SerializeSignatureData(data, crypto.NewTxData(pkScript, inputValue, tx, sigHashes, idx))
+	if err != nil {
+		return err
+	}
+
 	signatures, err := signer.SignAdvanced(crypto.NewSingleMsdWithData(sigHash, lc, signatureData))
 	if err != nil {
 		return err
@@ -394,20 +398,26 @@ func NewAllDataTest(data []byte, txData *crypto.TxData) *SignatureAndTxData {
 	}
 }
 
-func SerializeSignatureData(data []byte, txData *crypto.TxData) []byte {
+func SerializeSignatureData(data []byte, txData *crypto.TxData) ([]byte, error) {
+	//gob.Register(SignatureAndTxData{})
+
+	fmt.Println("SerializeSignatureData")
+
 	var buffer bytes.Buffer
 	encoder := gob.NewEncoder(&buffer)
 
 	err := encoder.Encode(NewAllDataTest(data, txData))
 	if err != nil {
-		fmt.Println("Error serializing:", err)
-		return nil
+		return nil, err
 	}
 
-	return buffer.Bytes()
+	return buffer.Bytes(), nil
 }
 
 func DeserializeSignatureData(data []byte) (*SignatureAndTxData, error) {
+
+	fmt.Println("DeserializeSignatureData")
+
 	var signatureAndTxData SignatureAndTxData
 	decoder := gob.NewDecoder(bytes.NewBuffer(data))
 	err := decoder.Decode(&signatureAndTxData)
