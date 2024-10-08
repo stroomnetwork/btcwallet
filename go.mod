@@ -25,7 +25,7 @@ require (
 	github.com/lightningnetwork/lnd/tlv v1.0.2
 	github.com/steveyen/gkvlite v0.0.0-20141117050110-5b47ed6d7458
 	github.com/stretchr/testify v1.8.4
-	github.com/stroomnetwork/frost v0.0.10
+	github.com/stroomnetwork/frost v0.0.12
 	golang.org/x/crypto v0.22.0
 	golang.org/x/net v0.24.0
 	golang.org/x/term v0.19.0
