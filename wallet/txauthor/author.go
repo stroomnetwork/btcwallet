@@ -371,13 +371,13 @@ func spendTaprootKey(signer frost.Signer, linearCombinations map[string]*crypto.
 		return fmt.Errorf("key not found for address %v", addrs[0].String())
 	}
 
-	signatureAndTxData, err := SerializeSignatureAndTxData(data, NewTxData(pkScript, inputValue, tx, sigHashes, idx))
+	txData, err := SerializeTxData(NewTxData(data, pkScript, inputValue, tx, sigHashes, idx))
 	if err != nil {
 		return err
 	}
 
 	signatures, err := signer.SignAdvanced(&crypto.MultiSignatureDescriptor{
-		Data: signatureAndTxData,
+		Data: txData,
 		SignDescriptors: []*crypto.LinearSignDescriptor{
 			{
 				MsgHash: sigHash,
@@ -395,40 +395,32 @@ func spendTaprootKey(signer frost.Signer, linearCombinations map[string]*crypto.
 }
 
 type TxData struct {
-	PkScript   []byte
-	InputValue int64
-	Tx         *wire.MsgTx
-	SigHashes  *txscript.TxSigHashes
-	Idx        int
-}
-
-func NewTxData(pkScript []byte, inputValue int64, tx *wire.MsgTx, sigHashes *txscript.TxSigHashes, idx int) *TxData {
-	return &TxData{
-		PkScript:   pkScript,
-		InputValue: inputValue,
-		Tx:         tx,
-		SigHashes:  sigHashes,
-		Idx:        idx,
-	}
-}
-
-type SignatureAndTxData struct {
 	SignatureData []byte
-	TxData        *TxData
+	PkScript      []byte
+	InputValue    int64
+	Tx            *wire.MsgTx
+	SigHashes     *txscript.TxSigHashes
+	Idx           int
 }
 
-func NewSignatureAndTxData(data []byte, txData *TxData) *SignatureAndTxData {
-	return &SignatureAndTxData{
-		SignatureData: data,
-		TxData:        txData,
+func NewTxData(signatureData []byte, pkScript []byte, inputValue int64, tx *wire.MsgTx,
+	sigHashes *txscript.TxSigHashes, idx int) *TxData {
+
+	return &TxData{
+		SignatureData: signatureData,
+		PkScript:      pkScript,
+		InputValue:    inputValue,
+		Tx:            tx,
+		SigHashes:     sigHashes,
+		Idx:           idx,
 	}
 }
 
-func SerializeSignatureAndTxData(signatureData []byte, txData *TxData) ([]byte, error) {
+func SerializeTxData(txData *TxData) ([]byte, error) {
 	var buffer bytes.Buffer
 	encoder := gob.NewEncoder(&buffer)
 
-	err := encoder.Encode(NewSignatureAndTxData(signatureData, txData))
+	err := encoder.Encode(txData)
 	if err != nil {
 		return nil, err
 	}
@@ -436,14 +428,14 @@ func SerializeSignatureAndTxData(signatureData []byte, txData *TxData) ([]byte, 
 	return buffer.Bytes(), nil
 }
 
-func DeserializeSignatureAndTxData(data []byte) (*SignatureAndTxData, error) {
-	var signatureAndTxData SignatureAndTxData
+func DeserializeTxData(data []byte) (*TxData, error) {
+	var txData TxData
 	decoder := gob.NewDecoder(bytes.NewBuffer(data))
-	err := decoder.Decode(&signatureAndTxData)
+	err := decoder.Decode(&txData)
 	if err != nil {
 		return nil, err
 	}
-	return &signatureAndTxData, nil
+	return &txData, nil
 }
 
 // spendNestedWitnessPubKey generates both a sigScript, and valid witness for
