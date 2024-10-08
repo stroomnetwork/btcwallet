@@ -416,6 +416,12 @@ func NewTxData(signatureData []byte, pkScript []byte, inputValue int64, tx *wire
 	}
 }
 
+func NewTxDataWithSignatureDataOnly(signatureData []byte) *TxData {
+	return &TxData{
+		SignatureData: signatureData,
+	}
+}
+
 func SerializeTxData(txData *TxData) ([]byte, error) {
 	var buffer bytes.Buffer
 	encoder := gob.NewEncoder(&buffer)
