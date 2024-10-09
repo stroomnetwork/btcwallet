@@ -428,7 +428,7 @@ func SerializeTxData(txData *TxData) ([]byte, error) {
 
 	err := encoder.Encode(txData)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to encode TxData: %w", err)
 	}
 
 	return buffer.Bytes(), nil
@@ -439,7 +439,7 @@ func DeserializeTxData(data []byte) (*TxData, error) {
 	decoder := gob.NewDecoder(bytes.NewBuffer(data))
 	err := decoder.Decode(&txData)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to decode TxData: %w", err)
 	}
 	return &txData, nil
 }
