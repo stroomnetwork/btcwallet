@@ -156,7 +156,7 @@ func doInit(config *BtcwalletConfig) (*wallet.Wallet, error) {
 	if !cfg.NoInitialLoad {
 		// Load the wallet database.  It must have been created already
 		// or this will return an appropriate error.
-		w, err = loader.OpenExistingWallet([]byte(cfg.WalletPass), false)
+		w, err = loader.OpenExistingWallet([]byte(cfg.WalletPass), cfg.CanConsolePrompt)
 		if err != nil {
 			log.Error(err)
 			return nil, err
@@ -179,9 +179,15 @@ func doInit(config *BtcwalletConfig) (*wallet.Wallet, error) {
 			return nil, err
 		}
 
-		changeAddressKey, err := w.GenerateKeyFromEthAddressAndImport(ethChangeAddr)
+		changeAddressKey, changeAddress, err := w.GenerateKeyFromEthAddressAndImport(ethChangeAddr)
 		if err != nil && !strings.Contains(err.Error(), "already exists") {
 			return nil, fmt.Errorf("cannot import change address: %w", err)
+		}
+		if changeAddress != nil {
+			log.Infof("Change address: %s", changeAddress.Address())
+		}
+		if changeAddressKey == nil {
+			return nil, fmt.Errorf("change key is nil")
 		}
 		w.ChangeAddressKey = changeAddressKey
 	}
