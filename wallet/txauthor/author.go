@@ -96,13 +96,18 @@ type ChangeSource struct {
 // BUGS: Fee estimation may be off when redeeming non-compressed P2PKH outputs.
 func NewUnsignedTransaction(outputs []*wire.TxOut, feeRatePerKb btcutil.Amount,
 	fetchInputs InputSource, changeSource *ChangeSource) (*AuthoredTx, error) {
+	return NewUnsignedTransactionWithAddedStroomFee(outputs, feeRatePerKb, fetchInputs, changeSource, 1)
+}
+
+func NewUnsignedTransactionWithAddedStroomFee(outputs []*wire.TxOut, feeRatePerKb btcutil.Amount,
+	fetchInputs InputSource, changeSource *ChangeSource, feeCoefficient float64) (*AuthoredTx, error) {
 
 	targetAmount := SumOutputValues(outputs)
 	fmt.Printf("targetAmount: %v\n", targetAmount)
 	estimatedSize := txsizes.EstimateVirtualSize(
 		0, 0, 1, 0, outputs, changeSource.ScriptSize,
 	)
-	targetFee := txrules.FeeForSerializeSize(feeRatePerKb, estimatedSize).MulF64(1.05)
+	targetFee := txrules.FeeForSerializeSize(feeRatePerKb, estimatedSize).MulF64(feeCoefficient)
 	fmt.Printf("targetFee: %v, estimatedSize: %v\n", targetFee, estimatedSize)
 
 	for {
@@ -140,9 +145,9 @@ func NewUnsignedTransaction(outputs []*wire.TxOut, feeRatePerKb btcutil.Amount,
 			p2pkh, p2tr, p2wpkh, nested, outputs, changeSource.ScriptSize,
 		)
 		maxRequiredFee := txrules.FeeForSerializeSize(feeRatePerKb, maxSignedSize)
-		totalFee := maxRequiredFee.MulF64(1.05)
+		totalFee := maxRequiredFee.MulF64(feeCoefficient)
 		remainingAmount := inputAmount - targetAmount
-		fmt.Printf("maxSignedSize: %v, totalFee: %v, remainingAmount: %v\n", maxRequiredFee, totalFee, remainingAmount)
+		fmt.Printf("maxRequiredFee: %v, totalFee: %v, remainingAmount: %v\n", maxRequiredFee, totalFee, remainingAmount)
 		if remainingAmount < totalFee {
 			targetFee = totalFee
 			continue
