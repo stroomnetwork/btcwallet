@@ -102,7 +102,7 @@ func NewUnsignedTransaction(outputs []*wire.TxOut, feeRatePerKb btcutil.Amount,
 	estimatedSize := txsizes.EstimateVirtualSize(
 		0, 0, 1, 0, outputs, changeSource.ScriptSize,
 	)
-	targetFee := txrules.FeeForSerializeSize(feeRatePerKb, estimatedSize)
+	targetFee := txrules.FeeForSerializeSize(feeRatePerKb, estimatedSize).MulF64(1.05)
 	fmt.Printf("targetFee: %v, estimatedSize: %v\n", targetFee, estimatedSize)
 
 	for {
@@ -112,7 +112,8 @@ func NewUnsignedTransaction(outputs []*wire.TxOut, feeRatePerKb btcutil.Amount,
 			return nil, err
 		}
 		if inputAmount < targetAmount+targetFee {
-			fmt.Errorf("insufficientFundsError\n")
+			fmt.Errorf("insufficientFundsError: inputAmout(%d) < targetAmount(%d) + targetFee(%d)\n",
+				inputAmount, targetAmount, targetFee)
 			return nil, insufficientFundsError{}
 		}
 		fmt.Printf("inputAmount: %v, lengths: %v, %v, %v\n", inputAmount, len(inputs), len(inputValues), len(scripts))
@@ -139,10 +140,11 @@ func NewUnsignedTransaction(outputs []*wire.TxOut, feeRatePerKb btcutil.Amount,
 			p2pkh, p2tr, p2wpkh, nested, outputs, changeSource.ScriptSize,
 		)
 		maxRequiredFee := txrules.FeeForSerializeSize(feeRatePerKb, maxSignedSize)
+		totalFee := maxRequiredFee.MulF64(1.05)
 		remainingAmount := inputAmount - targetAmount
-		fmt.Printf("maxSignedSize: %v, maxRequiredFee: %v, remainingAmount: %v\n", maxSignedSize, maxRequiredFee, remainingAmount)
-		if remainingAmount < maxRequiredFee {
-			targetFee = maxRequiredFee
+		fmt.Printf("maxSignedSize: %v, totalFee: %v, remainingAmount: %v\n", maxSignedSize, totalFee, remainingAmount)
+		if remainingAmount < totalFee {
+			targetFee = totalFee
 			continue
 		}
 
@@ -159,6 +161,8 @@ func NewUnsignedTransaction(outputs []*wire.TxOut, feeRatePerKb btcutil.Amount,
 		}
 
 		changeIndex := -1
+		// the change includes stroom fees as well
+		// TODO shall we check for dust change amount?
 		changeAmount := inputAmount - targetAmount - maxRequiredFee
 		changeScript, err := changeSource.NewScript()
 		if err != nil {
@@ -166,9 +170,7 @@ func NewUnsignedTransaction(outputs []*wire.TxOut, feeRatePerKb btcutil.Amount,
 			return nil, err
 		}
 		change := wire.NewTxOut(int64(changeAmount), changeScript)
-		if changeAmount != 0 && !txrules.IsDustOutput(change,
-			txrules.DefaultRelayFeePerKb) {
-
+		if changeAmount != 0 && !txrules.IsDustOutput(change, txrules.DefaultRelayFeePerKb) {
 			l := len(outputs)
 			unsignedTransaction.TxOut = append(outputs[:l:l], change)
 			changeIndex = l
