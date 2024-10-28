@@ -145,7 +145,13 @@ func NewUnsignedTransactionWithAddedStroomFee(outputs []*wire.TxOut, feeRatePerK
 			p2pkh, p2tr, p2wpkh, nested, outputs, changeSource.ScriptSize,
 		)
 		maxRequiredFee := txrules.FeeForSerializeSize(feeRatePerKb, maxSignedSize)
-		totalFee := maxRequiredFee.MulF64(feeCoefficient)
+
+		var totalFee btcutil.Amount
+		if feeCoefficient == 0 {
+			totalFee = maxRequiredFee
+		} else {
+			totalFee = maxRequiredFee.MulF64(feeCoefficient)
+		}
 		remainingAmount := inputAmount - targetAmount
 		fmt.Printf("maxRequiredFee: %v, totalFee: %v, remainingAmount: %v\n", maxRequiredFee, totalFee, remainingAmount)
 		if remainingAmount < totalFee {
@@ -166,6 +172,9 @@ func NewUnsignedTransactionWithAddedStroomFee(outputs []*wire.TxOut, feeRatePerK
 		}
 
 		// fees should be taken away from the output amount
+		if outputs[0].Value-int64(totalFee) < 546 {
+			continue
+		}
 		outputs[0].Value -= int64(totalFee)
 
 		changeIndex := -1
