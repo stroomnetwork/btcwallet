@@ -142,7 +142,7 @@ func NewUnsignedTransaction(outputs []*wire.TxOut, feeRatePerKb btcutil.Amount,
 		maxRequiredFee := txrules.FeeForSerializeSize(feeRatePerKb, maxSignedSize)
 		totalFee := maxRequiredFee.MulF64(1.05)
 		remainingAmount := inputAmount - targetAmount
-		fmt.Printf("maxSignedSize: %v, totalFee: %v, remainingAmount: %v\n", maxSignedSize, totalFee, remainingAmount)
+		fmt.Printf("maxSignedSize: %v, totalFee: %v, remainingAmount: %v\n", maxRequiredFee, totalFee, remainingAmount)
 		if remainingAmount < totalFee {
 			targetFee = totalFee
 			continue
@@ -160,10 +160,13 @@ func NewUnsignedTransaction(outputs []*wire.TxOut, feeRatePerKb btcutil.Amount,
 			LockTime: 0,
 		}
 
+		// fees should be taken away from the output amount
+		outputs[0].Value -= int64(totalFee)
+
 		changeIndex := -1
-		// the change includes stroom fees as well
+		// the change includes stroom fees
 		// TODO shall we check for dust change amount?
-		changeAmount := inputAmount - targetAmount - maxRequiredFee
+		changeAmount := inputAmount - targetAmount - maxRequiredFee + totalFee
 		changeScript, err := changeSource.NewScript()
 		if err != nil {
 			fmt.Errorf("changeSource.NewScript error: %v\n", err)
