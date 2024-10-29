@@ -104,6 +104,10 @@ func NewUnsignedTransaction(outputs []*wire.TxOut, feeRatePerKb btcutil.Amount,
 func NewUnsignedTransactionWithAddedStroomFee(outputs []*wire.TxOut, feeRatePerKb btcutil.Amount,
 	fetchInputs InputSource, changeSource *ChangeSource, feeCoefficient float64) (*AuthoredTx, error) {
 
+	if len(outputs) == 0 {
+		return nil, errors.New("no transaction outputs provided")
+	}
+
 	targetAmount := SumOutputValues(outputs)
 	fmt.Printf("targetAmount: %v\n", targetAmount)
 	estimatedSize := txsizes.EstimateVirtualSize(
