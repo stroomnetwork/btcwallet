@@ -3,7 +3,9 @@ package chain
 import "sync"
 
 type TopicQueue struct {
-	chanIn           chan interface{}
+	chanIn chan interface{}
+	// FIXME we need this initial queue to do not loose start messages
+	//		because wallet first start sending messages and after starts to listen them
 	initSubscription *ConcurrentQueue
 	subscriptions    []*ConcurrentQueue
 	quit             chan struct{}
