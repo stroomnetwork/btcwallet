@@ -10,12 +10,14 @@ import (
 	"encoding/gob"
 	"errors"
 	"fmt"
+
 	"github.com/btcsuite/btcd/btcutil"
 	"github.com/btcsuite/btcd/chaincfg"
 	"github.com/btcsuite/btcd/txscript"
 	"github.com/btcsuite/btcd/wire"
 	"github.com/btcsuite/btcwallet/wallet/txrules"
 	"github.com/btcsuite/btcwallet/wallet/txsizes"
+	"github.com/davecgh/go-spew/spew"
 	"github.com/stroomnetwork/frost"
 	"github.com/stroomnetwork/frost/crypto"
 )
@@ -108,11 +110,11 @@ func NewUnsignedTransaction(outputs []*wire.TxOut, feeRatePerKb btcutil.Amount,
 	for {
 		inputAmount, inputs, inputValues, scripts, err := fetchInputs(targetAmount + targetFee)
 		if err != nil {
-			fmt.Errorf("fetchInputs error: %v\n", err)
+			fmt.Printf("fetchInputs error: %v\n", err)
 			return nil, err
 		}
 		if inputAmount < targetAmount+targetFee {
-			fmt.Errorf("insufficientFundsError\n")
+			fmt.Printf("insufficientFundsError: inputAmount = %v, targetAmount = %v, targetFee = %v, inputs = %v, inputValues = %v\n", inputAmount, targetAmount, targetFee, spew.Sdump(inputs), inputValues)
 			return nil, insufficientFundsError{}
 		}
 		fmt.Printf("inputAmount: %v, lengths: %v, %v, %v\n", inputAmount, len(inputs), len(inputValues), len(scripts))

@@ -8,10 +8,12 @@ package wallet
 import (
 	"errors"
 	"fmt"
-	"github.com/btcsuite/btcd/btcec/v2"
-	"github.com/stroomnetwork/frost/crypto"
 	"math/rand"
 	"sort"
+
+	"github.com/btcsuite/btcd/btcec/v2"
+	"github.com/davecgh/go-spew/spew"
+	"github.com/stroomnetwork/frost/crypto"
 
 	"github.com/btcsuite/btcd/btcutil"
 	"github.com/btcsuite/btcd/txscript"
@@ -52,8 +54,8 @@ func makeInputSource(eligible []Coin) txauthor.InputSource {
 			)
 		}
 
-		log.Infof("currentTotal: %v, currentInputs: %v, currentInputValues: %v, currentScripts: %v",
-			currentTotal, currentInputs, currentInputValues, currentScripts)
+		log.Infof("makeInputSource, currentTotal: %v, currentInputs: %v, currentInputValues: %v, currentScripts: %v",
+			currentTotal, spew.Sdump(currentInputs), currentInputValues, currentScripts)
 
 		return currentTotal, currentInputs, currentInputValues,
 			currentScripts, nil
@@ -81,8 +83,8 @@ func constantInputSource(eligible []wtxmgr.Credit) txauthor.InputSource {
 
 	return func(target btcutil.Amount) (btcutil.Amount, []*wire.TxIn,
 		[]btcutil.Amount, [][]byte, error) {
-		log.Infof("currentTotal: %v, currentInputs: %v, currentInputValues: %v, currentScripts: %v",
-			currentTotal, currentInputs, currentInputValues, currentScripts)
+		log.Infof("constantInputSource, currentTotal: %v, currentInputs: %v, currentInputValues: %v, currentScripts: %v",
+			currentTotal, spew.Sdump(currentInputs), currentInputValues, currentScripts)
 		return currentTotal, currentInputs, currentInputValues,
 			currentScripts, nil
 	}
