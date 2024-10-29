@@ -29,7 +29,7 @@ func TestTopicQueue(t *testing.T) {
 
 			outs := make([]<-chan interface{}, tt.subscribersCount)
 			for i := 0; i < tt.subscribersCount; i++ {
-				outs[i] = tq.SubscribeOnChanOut(1)
+				outs[i] = tq.ChanOut()
 			}
 			// send 1 message
 			go func() {

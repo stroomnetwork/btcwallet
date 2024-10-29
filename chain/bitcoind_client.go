@@ -231,7 +231,7 @@ func (c *BitcoindClient) TestMempoolAccept(txns []*wire.MsgTx,
 //
 // NOTE: This is part of the chain.Interface interface.
 func (c *BitcoindClient) Notifications() <-chan interface{} {
-	return c.notificationQueue.SubscribeOnChanOut(20)
+	return c.notificationQueue.ChanOut()
 }
 
 // NotifyReceived allows the chain backend to notify the caller whenever a

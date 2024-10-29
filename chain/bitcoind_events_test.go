@@ -262,6 +262,7 @@ func testLookupInputMempoolSpend(t *testing.T, miner *rpctest.Harness,
 // re-org.
 func testReorg(t *testing.T, miner1, miner2 *rpctest.Harness,
 	client *BitcoindClient) {
+	//t.Skip("Temporary ignore this test because subscription happens after sending messages")
 
 	require := require.New(t)
 
