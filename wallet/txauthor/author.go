@@ -20,6 +20,8 @@ import (
 	"github.com/stroomnetwork/frost/crypto"
 )
 
+const dustAmount = 546
+
 // SumOutputValues sums up the list of TxOuts and returns an Amount.
 func SumOutputValues(outputs []*wire.TxOut) (totalOutput btcutil.Amount) {
 	for _, txOut := range outputs {
@@ -156,6 +158,7 @@ func NewUnsignedTransactionWithAddedStroomFee(outputs []*wire.TxOut, feeRatePerK
 		fmt.Printf("maxRequiredFee: %v, totalFee: %v, remainingAmount: %v\n", maxRequiredFee, totalFee, remainingAmount)
 		if remainingAmount < totalFee {
 			targetFee = totalFee
+			fmt.Printf("remainingAmount(%v) < totalFee(%v), continue\n", remainingAmount, totalFee)
 			continue
 		}
 
@@ -172,7 +175,7 @@ func NewUnsignedTransactionWithAddedStroomFee(outputs []*wire.TxOut, feeRatePerK
 		}
 
 		// fees should be taken away from the output amount
-		if outputs[0].Value-int64(totalFee) < 546 {
+		if outputs[0].Value-int64(totalFee) < dustAmount {
 			continue
 		}
 		outputs[0].Value -= int64(totalFee)
