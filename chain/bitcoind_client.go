@@ -89,7 +89,7 @@ type BitcoindClient struct {
 	// can fully invalidate one waiting to be processed. For example,
 	// BlockConnected notifications for greater block heights can remove the
 	// need to process earlier notifications still waiting to be processed.
-	notificationQueue *ConcurrentQueue
+	notificationQueue *TopicQueue
 
 	// txNtfns is a channel through which transaction events will be
 	// retrieved from the backing bitcoind connection, either via ZMQ or
@@ -231,7 +231,7 @@ func (c *BitcoindClient) TestMempoolAccept(txns []*wire.MsgTx,
 //
 // NOTE: This is part of the chain.Interface interface.
 func (c *BitcoindClient) Notifications() <-chan interface{} {
-	return c.notificationQueue.ChanOut()
+	return c.notificationQueue.SubscribeOnChanOut(20)
 }
 
 // NotifyReceived allows the chain backend to notify the caller whenever a
