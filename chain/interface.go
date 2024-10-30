@@ -125,6 +125,14 @@ type (
 		Height int32
 		Time   time.Time
 	}
+
+	// ReorgFinished is a notification that reorg has finished.
+	ReorgFinished struct {
+		FromHash   *chainhash.Hash
+		FromHeight int32
+		ToHash     *chainhash.Hash
+		ToHeight   int32
+	}
 )
 
 // batchClient defines an interface that is used to interact with the RPC

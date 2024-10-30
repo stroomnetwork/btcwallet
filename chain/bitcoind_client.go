@@ -837,6 +837,31 @@ func (c *BitcoindClient) onRescanFinished(hash *chainhash.Hash, height int32,
 	}
 }
 
+func (c *BitcoindClient) onReorgFinished(from, to *wire.MsgBlock) error {
+	fromHash := from.BlockHash()
+	fromHeight, err := c.GetBlockHeight(&fromHash)
+	if err != nil {
+		return fmt.Errorf("unable to get block height for %v: %w", fromHash, err)
+	}
+
+	toHash := to.BlockHash()
+	toHeight, err := c.GetBlockHeight(&toHash)
+	if err != nil {
+		return fmt.Errorf("unable to get block height for %v: %w", toHash, err)
+	}
+
+	select {
+	case c.notificationQueue.ChanIn() <- &ReorgFinished{
+		FromHash:   &fromHash,
+		FromHeight: fromHeight,
+		ToHash:     &toHash,
+		ToHeight:   toHeight,
+	}:
+	case <-c.quit:
+	}
+	return nil
+}
+
 // reorg processes a reorganization during chain synchronization. This is
 // separate from a rescan's handling of a reorg. This will rewind back until it
 // finds a common ancestor and notify all the new blocks since then.
@@ -939,6 +964,9 @@ func (c *BitcoindClient) reorg(currentBlock waddrmgr.BlockStamp,
 
 	currentBlock.Height--
 
+	reorgFirstBlock := blocksToNotify.Front().Value.(*wire.MsgBlock)
+	reorgLastBlock := blocksToNotify.Back().Value.(*wire.MsgBlock)
+
 	// Now we fast-forward to the new block, notifying along the way.
 	for blocksToNotify.Front() != nil {
 		nextBlock := blocksToNotify.Front().Value.(*wire.MsgBlock)
@@ -963,12 +991,16 @@ func (c *BitcoindClient) reorg(currentBlock waddrmgr.BlockStamp,
 	c.bestBlock = currentBlock
 	c.bestBlockMtx.Unlock()
 
+	if err := c.onReorgFinished(reorgFirstBlock, reorgLastBlock); err != nil {
+		return err
+	}
+
 	return nil
 }
 
 // FilterBlocks scans the blocks contained in the FilterBlocksRequest for any
 // addresses of interest. Each block will be fetched and filtered sequentially,
-// returning a FilterBlocksReponse for the first block containing a matching
+// returning a FilterBlocksResponse for the first block containing a matching
 // address. If no matches are found in the range of blocks requested, the
 // returned response will be nil.
 //
