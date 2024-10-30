@@ -8,17 +8,23 @@ type TopicQueue struct {
 	//		because wallet first start sending messages and after starts to listen them
 	initSubscription *ConcurrentQueue
 	subscriptions    []*ConcurrentQueue
-	quit             chan struct{}
-	lock             *sync.RWMutex
+
+	lock *sync.RWMutex
+	quit chan struct{}
+	wg   *sync.WaitGroup
 }
+
+const defaultQueueBuffSize = 20
 
 func NewTopicQueue() *TopicQueue {
 	tq := &TopicQueue{
 		chanIn:           make(chan interface{}),
-		initSubscription: NewConcurrentQueue(20),
+		initSubscription: NewConcurrentQueue(defaultQueueBuffSize),
 		subscriptions:    make([]*ConcurrentQueue, 0),
-		quit:             make(chan struct{}),
-		lock:             &sync.RWMutex{},
+
+		lock: &sync.RWMutex{},
+		quit: make(chan struct{}),
+		wg:   &sync.WaitGroup{},
 	}
 	tq.initSubscription.Start()
 	return tq
@@ -36,7 +42,7 @@ func (tq *TopicQueue) ChanOut() <-chan interface{} {
 		q = tq.initSubscription
 		tq.initSubscription = nil
 	} else {
-		q = NewConcurrentQueue(20)
+		q = NewConcurrentQueue(defaultQueueBuffSize)
 		q.Start()
 	}
 	tq.subscriptions = append(tq.subscriptions, q)
@@ -44,7 +50,9 @@ func (tq *TopicQueue) ChanOut() <-chan interface{} {
 }
 
 func (tq *TopicQueue) Start() {
+	tq.wg.Add(1)
 	go func() {
+		defer tq.wg.Done()
 		for {
 			select {
 			case item := <-tq.chanIn:
@@ -68,4 +76,5 @@ func (tq *TopicQueue) Stop() {
 	for _, subscription := range tq.subscriptions {
 		subscription.Stop()
 	}
+	tq.wg.Wait()
 }
