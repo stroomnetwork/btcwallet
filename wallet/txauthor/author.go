@@ -115,7 +115,7 @@ func NewUnsignedTransactionWithAddedStroomFee(outputs []*wire.TxOut, feeRatePerK
 	fmt.Printf("targetFee: %v, estimatedSize: %v\n", targetFee, estimatedSize)
 
 	if outputs[0].Value < int64(targetFee) {
-		return nil, fmt.Errorf("redeem amount(%v) < targetFee(%v) \n")
+		return nil, fmt.Errorf("redeem amount(%v) < targetFee(%v) \n", outputs[0].Value, targetFee)
 	}
 
 	for {
@@ -182,7 +182,7 @@ func NewUnsignedTransactionWithAddedStroomFee(outputs []*wire.TxOut, feeRatePerK
 
 		// fees should be taken away from the output amount
 		if outputs[0].Value < int64(totalFee) {
-			return nil, fmt.Errorf("redeem amount(%v) < totalFee(%v) \n")
+			return nil, fmt.Errorf("redeem amount(%v) < totalFee(%v) \n", outputs[0].Value, targetFee)
 		}
 		outputs[0].Value -= int64(totalFee)
 
