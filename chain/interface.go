@@ -47,6 +47,7 @@ type Interface interface {
 	NotifyReceived([]btcutil.Address) error
 	NotifyBlocks() error
 	Notifications() <-chan interface{}
+	// PublicNotifications returns a channel to receive public notifications
 	PublicNotifications() <-chan interface{}
 	BackEnd() string
 	TestMempoolAccept([]*wire.MsgTx, float64) ([]*btcjson.TestMempoolAcceptResult, error)
