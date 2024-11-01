@@ -1474,3 +1474,7 @@ func (c *BitcoindClient) LookupInputMempoolSpend(op wire.OutPoint) (
 
 	return c.chainConn.events.LookupInputSpend(op)
 }
+
+func (c *BitcoindClient) EstimateFee(numBlocks int64) (float64, error) {
+	return c.chainConn.client.EstimateFee(numBlocks)
+}

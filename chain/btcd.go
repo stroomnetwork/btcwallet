@@ -6,6 +6,7 @@ package chain
 
 import (
 	"errors"
+	"fmt"
 	"sync"
 	"time"
 
@@ -581,4 +582,8 @@ func (c *RPCClient) LookupInputMempoolSpend(op wire.OutPoint) (
 	chainhash.Hash, bool) {
 
 	return getTxSpendingPrevOut(op, c.Client)
+}
+
+func (c *RPCClient) EstimateFee(numBlocks int64) (float64, error) {
+	return 0, fmt.Errorf("not implemented")
 }
