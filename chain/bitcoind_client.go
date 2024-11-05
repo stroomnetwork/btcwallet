@@ -748,7 +748,10 @@ func (c *BitcoindClient) onBlockConnected(hash *chainhash.Hash, height int32,
 		case <-c.quit:
 		}
 		if c.publicNotificationQueue != nil {
-			c.publicNotificationQueue.ChanIn() <- n
+			select {
+			case c.publicNotificationQueue.ChanIn() <- n:
+			case <-c.quit:
+			}
 		}
 	}
 }
@@ -777,7 +780,10 @@ func (c *BitcoindClient) onFilteredBlockConnected(height int32,
 		case <-c.quit:
 		}
 		if c.publicNotificationQueue != nil {
-			c.publicNotificationQueue.ChanIn() <- n
+			select {
+			case c.publicNotificationQueue.ChanIn() <- n:
+			case <-c.quit:
+			}
 		}
 	}
 }
@@ -801,7 +807,10 @@ func (c *BitcoindClient) onBlockDisconnected(hash *chainhash.Hash, height int32,
 		case <-c.quit:
 		}
 		if c.publicNotificationQueue != nil {
-			c.publicNotificationQueue.ChanIn() <- n
+			select {
+			case c.publicNotificationQueue.ChanIn() <- n:
+			case <-c.quit:
+			}
 		}
 	}
 }
@@ -828,7 +837,10 @@ func (c *BitcoindClient) onRelevantTx(tx *wtxmgr.TxRecord,
 	case <-c.quit:
 	}
 	if c.publicNotificationQueue != nil {
-		c.publicNotificationQueue.ChanIn() <- n
+		select {
+		case c.publicNotificationQueue.ChanIn() <- n:
+		case <-c.quit:
+		}
 	}
 }
 
@@ -847,7 +859,10 @@ func (c *BitcoindClient) onRescanProgress(hash *chainhash.Hash, height int32,
 	case <-c.quit:
 	}
 	if c.publicNotificationQueue != nil {
-		c.publicNotificationQueue.ChanIn() <- n
+		select {
+		case c.publicNotificationQueue.ChanIn() <- n:
+		case <-c.quit:
+		}
 	}
 }
 
@@ -866,7 +881,10 @@ func (c *BitcoindClient) onRescanFinished(hash *chainhash.Hash, height int32,
 	case <-c.quit:
 	}
 	if c.publicNotificationQueue != nil {
-		c.publicNotificationQueue.ChanIn() <- n
+		select {
+		case c.publicNotificationQueue.ChanIn() <- n:
+		case <-c.quit:
+		}
 	}
 }
 
