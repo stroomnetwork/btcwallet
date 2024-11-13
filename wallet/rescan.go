@@ -277,6 +277,13 @@ func (w *Wallet) Rescan(addrs []btcutil.Address, unspent []wtxmgr.Credit) error 
 	return w.rescanWithTarget(addrs, unspent, nil)
 }
 
+// RescanFor begins a rescan for the given addresses and unspent outputs starting from the `startBlock`.
+// This is intended to be used to sync a wallet back up to the
+// current best block for the given address or unspent transactions.
+func (w *Wallet) RescanFor(addr btcutil.Address, unspent []wtxmgr.Credit, startBlock *waddrmgr.BlockStamp) error {
+	return w.rescanWithTarget([]btcutil.Address{addr}, unspent, startBlock)
+}
+
 // rescanWithTarget performs a rescan starting at the optional startStamp. If
 // none is provided, the rescan will begin from the manager's sync tip.
 func (w *Wallet) rescanWithTarget(addrs []btcutil.Address,
