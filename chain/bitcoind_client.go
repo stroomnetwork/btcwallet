@@ -89,8 +89,7 @@ type BitcoindClient struct {
 	// can fully invalidate one waiting to be processed. For example,
 	// BlockConnected notifications for greater block heights can remove the
 	// need to process earlier notifications still waiting to be processed.
-	notificationQueue       *ConcurrentQueue
-	publicNotificationQueue *ConcurrentQueue
+	notificationQueue *ConcurrentQueue
 
 	// txNtfns is a channel through which transaction events will be
 	// retrieved from the backing bitcoind connection, either via ZMQ or
@@ -262,14 +261,6 @@ func (c *BitcoindClient) TestMempoolAccept(txns []*wire.MsgTx,
 // NOTE: This is part of the chain.Interface interface.
 func (c *BitcoindClient) Notifications() <-chan interface{} {
 	return c.notificationQueue.ChanOut()
-}
-
-func (c *BitcoindClient) PublicNotifications() <-chan interface{} {
-	if c.publicNotificationQueue == nil {
-		c.publicNotificationQueue = NewConcurrentQueue(20)
-		c.publicNotificationQueue.Start()
-	}
-	return c.publicNotificationQueue.ChanOut()
 }
 
 // NotifyReceived allows the chain backend to notify the caller whenever a
@@ -593,9 +584,6 @@ func (c *BitcoindClient) Stop() {
 	c.chainConn.RemoveClient(c.id)
 
 	c.notificationQueue.Stop()
-	if c.publicNotificationQueue != nil {
-		c.publicNotificationQueue.Stop()
-	}
 }
 
 // WaitForShutdown blocks until the client has finished disconnecting and all
@@ -765,22 +753,15 @@ func (c *BitcoindClient) onBlockConnected(hash *chainhash.Hash, height int32,
 	timestamp time.Time) {
 
 	if c.shouldNotifyBlocks() {
-		n := BlockConnected{
+		select {
+		case c.notificationQueue.ChanIn() <- BlockConnected{
 			Block: wtxmgr.Block{
 				Hash:   *hash,
 				Height: height,
 			},
 			Time: timestamp,
-		}
-		select {
-		case c.notificationQueue.ChanIn() <- n:
+		}:
 		case <-c.quit:
-		}
-		if c.publicNotificationQueue != nil {
-			select {
-			case c.publicNotificationQueue.ChanIn() <- n:
-			case <-c.quit:
-			}
 		}
 	}
 }
@@ -794,7 +775,8 @@ func (c *BitcoindClient) onFilteredBlockConnected(height int32,
 	header *wire.BlockHeader, relevantTxs []*wtxmgr.TxRecord) {
 
 	if c.shouldNotifyBlocks() {
-		n := FilteredBlockConnected{
+		select {
+		case c.notificationQueue.ChanIn() <- FilteredBlockConnected{
 			Block: &wtxmgr.BlockMeta{
 				Block: wtxmgr.Block{
 					Hash:   header.BlockHash(),
@@ -803,16 +785,8 @@ func (c *BitcoindClient) onFilteredBlockConnected(height int32,
 				Time: header.Timestamp,
 			},
 			RelevantTxs: relevantTxs,
-		}
-		select {
-		case c.notificationQueue.ChanIn() <- n:
+		}:
 		case <-c.quit:
-		}
-		if c.publicNotificationQueue != nil {
-			select {
-			case c.publicNotificationQueue.ChanIn() <- n:
-			case <-c.quit:
-			}
 		}
 	}
 }
@@ -824,22 +798,15 @@ func (c *BitcoindClient) onBlockDisconnected(hash *chainhash.Hash, height int32,
 	timestamp time.Time) {
 
 	if c.shouldNotifyBlocks() {
-		n := BlockDisconnected{
+		select {
+		case c.notificationQueue.ChanIn() <- BlockDisconnected{
 			Block: wtxmgr.Block{
 				Hash:   *hash,
 				Height: height,
 			},
 			Time: timestamp,
-		}
-		select {
-		case c.notificationQueue.ChanIn() <- n:
+		}:
 		case <-c.quit:
-		}
-		if c.publicNotificationQueue != nil {
-			select {
-			case c.publicNotificationQueue.ChanIn() <- n:
-			case <-c.quit:
-			}
 		}
 	}
 }
@@ -857,19 +824,13 @@ func (c *BitcoindClient) onRelevantTx(tx *wtxmgr.TxRecord,
 			"parse block: %v", err)
 		return
 	}
-	n := RelevantTx{
+
+	select {
+	case c.notificationQueue.ChanIn() <- RelevantTx{
 		TxRecord: tx,
 		Block:    block,
-	}
-	select {
-	case c.notificationQueue.ChanIn() <- n:
+	}:
 	case <-c.quit:
-	}
-	if c.publicNotificationQueue != nil {
-		select {
-		case c.publicNotificationQueue.ChanIn() <- n:
-		case <-c.quit:
-		}
 	}
 }
 
@@ -878,20 +839,14 @@ func (c *BitcoindClient) onRelevantTx(tx *wtxmgr.TxRecord,
 // the current rescan progress details.
 func (c *BitcoindClient) onRescanProgress(hash *chainhash.Hash, height int32,
 	timestamp time.Time) {
-	n := &RescanProgress{
+
+	select {
+	case c.notificationQueue.ChanIn() <- &RescanProgress{
 		Hash:   *hash,
 		Height: height,
 		Time:   timestamp,
-	}
-	select {
-	case c.notificationQueue.ChanIn() <- n:
+	}:
 	case <-c.quit:
-	}
-	if c.publicNotificationQueue != nil {
-		select {
-		case c.publicNotificationQueue.ChanIn() <- n:
-		case <-c.quit:
-		}
 	}
 }
 
@@ -900,47 +855,15 @@ func (c *BitcoindClient) onRescanProgress(hash *chainhash.Hash, height int32,
 // the details of the last block in the range of the rescan.
 func (c *BitcoindClient) onRescanFinished(hash *chainhash.Hash, height int32,
 	timestamp time.Time) {
-	n := &RescanFinished{
+
+	select {
+	case c.notificationQueue.ChanIn() <- &RescanFinished{
 		Hash:   hash,
 		Height: height,
 		Time:   timestamp,
-	}
-	select {
-	case c.notificationQueue.ChanIn() <- n:
+	}:
 	case <-c.quit:
 	}
-	if c.publicNotificationQueue != nil {
-		select {
-		case c.publicNotificationQueue.ChanIn() <- n:
-		case <-c.quit:
-		}
-	}
-}
-
-func (c *BitcoindClient) onReorgFinished(from, to *wire.MsgBlock) error {
-	if c.publicNotificationQueue == nil {
-		return nil
-	}
-
-	fromHash := from.BlockHash()
-	fromHeight, err := c.GetBlockHeight(&fromHash)
-	if err != nil {
-		return fmt.Errorf("unable to get block height for %v: %w", fromHash, err)
-	}
-
-	toHash := to.BlockHash()
-	toHeight, err := c.GetBlockHeight(&toHash)
-	if err != nil {
-		return fmt.Errorf("unable to get block height for %v: %w", toHash, err)
-	}
-	c.publicNotificationQueue.ChanIn() <- &ReorgFinished{
-		FromHash:   &fromHash,
-		FromHeight: fromHeight,
-		ToHash:     &toHash,
-		ToHeight:   toHeight,
-	}
-
-	return nil
 }
 
 // reorg processes a reorganization during chain synchronization. This is
@@ -1045,9 +968,6 @@ func (c *BitcoindClient) reorg(currentBlock waddrmgr.BlockStamp,
 
 	currentBlock.Height--
 
-	reorgFirstBlock := blocksToNotify.Front().Value.(*wire.MsgBlock)
-	reorgLastBlock := blocksToNotify.Back().Value.(*wire.MsgBlock)
-
 	// Now we fast-forward to the new block, notifying along the way.
 	for blocksToNotify.Front() != nil {
 		nextBlock := blocksToNotify.Front().Value.(*wire.MsgBlock)
@@ -1072,16 +992,12 @@ func (c *BitcoindClient) reorg(currentBlock waddrmgr.BlockStamp,
 	c.bestBlock = currentBlock
 	c.bestBlockMtx.Unlock()
 
-	if err := c.onReorgFinished(reorgFirstBlock, reorgLastBlock); err != nil {
-		return err
-	}
-
 	return nil
 }
 
 // FilterBlocks scans the blocks contained in the FilterBlocksRequest for any
 // addresses of interest. Each block will be fetched and filtered sequentially,
-// returning a FilterBlocksResponse for the first block containing a matching
+// returning a FilterBlocksReponse for the first block containing a matching
 // address. If no matches are found in the range of blocks requested, the
 // returned response will be nil.
 //

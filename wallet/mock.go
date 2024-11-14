@@ -88,10 +88,6 @@ func (m *mockChainClient) Notifications() <-chan interface{} {
 	return nil
 }
 
-func (m *mockChainClient) PublicNotifications() <-chan interface{} {
-	return nil
-}
-
 func (m *mockChainClient) BackEnd() string {
 	return "mock"
 }

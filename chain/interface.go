@@ -47,8 +47,6 @@ type Interface interface {
 	NotifyReceived([]btcutil.Address) error
 	NotifyBlocks() error
 	Notifications() <-chan interface{}
-	// PublicNotifications returns a channel to receive public notifications
-	PublicNotifications() <-chan interface{}
 	BackEnd() string
 	TestMempoolAccept([]*wire.MsgTx, float64) ([]*btcjson.TestMempoolAcceptResult, error)
 	MapRPCErr(err error) error
@@ -128,14 +126,6 @@ type (
 		Hash   *chainhash.Hash
 		Height int32
 		Time   time.Time
-	}
-
-	// ReorgFinished is a notification that reorg has finished.
-	ReorgFinished struct {
-		FromHash   *chainhash.Hash
-		FromHeight int32
-		ToHash     *chainhash.Hash
-		ToHeight   int32
 	}
 )
 
