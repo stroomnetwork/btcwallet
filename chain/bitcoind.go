@@ -14,17 +14,17 @@ func SetupBitcoind(cfg *BitcoindConfig) (*BitcoindClient, error) {
 		if err != nil {
 			log.Errorf("error creating bitcoind connection: %v", err)
 		}
-		if chainConn == nil {
-			log.Errorf("chainConn is nil")
-		} else {
-			c <- chainConn
-		}
+		c <- chainConn
 	}()
 
 	select {
 	case chainConn := <-c:
+		err := chainConn.Start()
+		if err != nil {
+			return nil, err
+		}
 		btcClient := chainConn.NewBitcoindClient()
-		err := btcClient.Start()
+		err = btcClient.Start()
 		if err != nil {
 			return nil, err
 		}
