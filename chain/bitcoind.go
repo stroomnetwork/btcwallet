@@ -19,16 +19,15 @@ func SetupBitcoind(cfg *BitcoindConfig) (*BitcoindClient, error) {
 
 	select {
 	case chainConn := <-c:
-		err := chainConn.Start()
-		if err != nil {
+		log.Debug("Starting bitcoind connection...")
+		if err := chainConn.Start(); err != nil {
 			return nil, err
 		}
+		log.Debug("Starting bitcoind client...")
 		btcClient := chainConn.NewBitcoindClient()
-		err = btcClient.Start()
-		if err != nil {
+		if err := btcClient.Start(); err != nil {
 			return nil, err
 		}
-
 		return btcClient, nil
 	case <-time.After(2 * time.Second):
 		fmt.Println("timeout creating bitcoind connection")
