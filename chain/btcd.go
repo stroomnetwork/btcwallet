@@ -226,9 +226,11 @@ func (c *RPCClient) Start() error {
 	c.quitMtx.Lock()
 	c.started = true
 	c.quitMtx.Unlock()
+	log.Info("RPCClient started. Running the routines...")
 
 	c.wg.Add(1)
 	go c.handler()
+	log.Info("RPCClient started.")
 	return nil
 }
 

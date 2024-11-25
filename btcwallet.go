@@ -272,6 +272,8 @@ func startChainRPC(certs []byte) (*chain.RPCClient, error) {
 	if err != nil {
 		return nil, err
 	}
+	log.Info("RPC client created. Staring...")
 	err = rpcc.Start()
+	log.Info("RPC client started")
 	return rpcc, err
 }

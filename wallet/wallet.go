@@ -195,6 +195,32 @@ func (w *Wallet) Start() {
 	w.wg.Add(2)
 	go w.txCreator()
 	go w.walletLocker()
+	//go w.logBestHeight()
+}
+
+// write a function that logs Wallet's best height every 10 seconds
+func (w *Wallet) logBestHeight() {
+	ticker := time.NewTicker(10 * time.Second)
+	defer ticker.Stop()
+
+	for {
+		select {
+		case <-ticker.C:
+			if w.chainClient == nil {
+				log.Error("w.chainClient is nil")
+				continue
+			}
+			bestHeight, _, err := w.chainClient.GetBestBlock()
+			if err != nil {
+				log.Errorf("Failed to get best block: %v", err)
+				continue
+			}
+			log.Infof("Wallet's best block height: %d", bestHeight)
+		case <-w.quitChan():
+			return
+		}
+	}
+	w.wg.Done()
 }
 
 // SynchronizeRPC associates the wallet with the consensus RPC client,
