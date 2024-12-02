@@ -3509,7 +3509,7 @@ func (w *Wallet) SendOutputsWithDataAndRedeemIdCheck(outputs []*wire.TxOut, keyS
 	coinSelectionStrategy CoinSelectionStrategy, label string, redeemId uint32, start, end *BlockIdentifier, data []byte) (*wire.MsgTx,
 	error) {
 
-	/*isSpent, hash, err := w.IsRedeemIdAlreadySpent(redeemId, start, end)
+	isSpent, hash, err := w.IsRedeemIdAlreadySpent(redeemId, start, end)
 
 	if err != nil {
 		return nil, err
@@ -3517,7 +3517,7 @@ func (w *Wallet) SendOutputsWithDataAndRedeemIdCheck(outputs []*wire.TxOut, keyS
 
 	if isSpent {
 		return nil, fmt.Errorf("redeem id %d already spent in tx %s", redeemId, hash)
-	}*/
+	}
 
 	return w.sendOutputs(
 		outputs, keyScope, account, minconf, satPerKb,
