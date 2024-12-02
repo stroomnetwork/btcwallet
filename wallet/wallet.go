@@ -134,6 +134,8 @@ type Wallet struct {
 	FrostSigner      frost.Signer
 	ChangeAddressKey *btcec.PublicKey
 
+	LogTxCreation bool
+
 	AddressMapStorage *AddressMapStorage
 	Pk1, Pk2          *btcec.PublicKey
 	FeeCoefficient    float64
