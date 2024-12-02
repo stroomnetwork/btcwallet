@@ -3504,6 +3504,16 @@ func (w *Wallet) SendOutputs(outputs []*wire.TxOut, keyScope *waddrmgr.KeyScope,
 	)
 }
 
+func (w *Wallet) SendOutputsWithData(outputs []*wire.TxOut, keyScope *waddrmgr.KeyScope,
+	account uint32, minconf int32, satPerKb btcutil.Amount,
+	coinSelectionStrategy CoinSelectionStrategy, label string, data []byte) (*wire.MsgTx, error) {
+
+	return w.sendOutputs(
+		outputs, keyScope, account, minconf, satPerKb,
+		coinSelectionStrategy, label, 0, data,
+	)
+}
+
 func (w *Wallet) SendOutputsWithDataAndRedeemIdCheck(outputs []*wire.TxOut, keyScope *waddrmgr.KeyScope,
 	account uint32, minconf int32, satPerKb btcutil.Amount,
 	coinSelectionStrategy CoinSelectionStrategy, label string, redeemId uint32, start, end *BlockIdentifier, data []byte) (*wire.MsgTx,
