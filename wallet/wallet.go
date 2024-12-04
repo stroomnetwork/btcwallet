@@ -477,12 +477,12 @@ func (w *Wallet) syncWithChain(birthdayStamp *waddrmgr.BlockStamp) error {
 
 	// If the wallet requested an on-chain recovery of its funds, we'll do
 	// so now.
-	/*if w.recoveryWindow > 0 {
+	if w.recoveryWindow > 0 {
 		if err := w.recovery(chainClient, birthdayStamp); err != nil {
 			return fmt.Errorf("unable to perform wallet recovery: "+
 				"%w", err)
 		}
-	}*/
+	}
 
 	// Compare previously-seen blocks against the current chain. If any of
 	// these blocks no longer exist, rollback all of the missing blocks
