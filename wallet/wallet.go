@@ -1069,7 +1069,7 @@ func newFilterBlocksRequest(w *Wallet, batch []wtxmgr.BlockMeta, scopedMgrs map[
 
 		for index, addr := range scopeState.ExternalBranch.Addrs() {
 			log.Infof("ExternalBranch address %v present=%v, scope: %v",
-				addresses, isPresent(addresses, addr), scope)
+				addr, isPresent(addresses, addr), scope)
 			scopedIndex := waddrmgr.ScopedIndex{
 				Scope: scope,
 				Index: index,
