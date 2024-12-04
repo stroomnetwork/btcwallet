@@ -1048,22 +1048,17 @@ func newFilterBlocksRequest(w *Wallet, batch []wtxmgr.BlockMeta, scopedMgrs map[
 		WatchedOutPoints: recoveryState.WatchedOutPoints(),
 	}
 
+	addresses, err := w.AccountAddresses(waddrmgr.ImportedAddrAccount)
+	if err == nil {
+		for _, addr := range addresses {
+			log.Infof("newFilterBlocksRequest: address %v", addr)
+		}
+	}
+
 	// Populate the external and internal addresses by merging the addresses
 	// sets belong to all currently tracked scopes.
 	for scope := range scopedMgrs {
 		scopeState := recoveryState.StateForScope(scope)
-
-		addresses, _ := w.AccountAddresses(waddrmgr.ImportedAddrAccount)
-		/*if err == nil {
-			for index, addr := range addresses {
-				log.Infof("ImportedAddrAccount address for scope %v: %v", scope, addr)
-				scopedIndex := waddrmgr.ScopedIndex{
-					Scope: scope,
-					Index: uint32(index),
-				}
-				filterReq.ExternalAddrs[scopedIndex] = addr
-			}
-		}*/
 
 		for index, addr := range scopeState.ExternalBranch.Addrs() {
 			present := isPresent(addresses, addr)
