@@ -1120,6 +1120,23 @@ func extendFoundAddresses(ns walletdb.ReadWriteBucket,
 		// belong to this scope.
 		for index := range indexes {
 			addr := scopeState.ExternalBranch.GetAddr(index)
+			if addr == nil {
+				log.Warnf("Found external address not in recovery state, index = %d; scope = %v;",
+					index, scope)
+				log.Warn("Indexes are:")
+				for i := range indexes {
+					log.Warnf("index = %d", i)
+				}
+				log.Warnf("ExternalBranch recoveryWindow = %d; horizon = %d; nextUnfound = %d; ",
+					scopeState.ExternalBranch.recoveryWindow, scopeState.ExternalBranch.horizon,
+					scopeState.ExternalBranch.nextUnfound)
+				for k, v := range scopeState.ExternalBranch.addresses {
+					log.Warnf("ExternalBranch.address = %d %v", k, v)
+				}
+				for k, v := range scopeState.ExternalBranch.invalidChildren {
+					log.Warnf("ExternalBranch.invalidChildren = %d %v", k, v)
+				}
+			}
 			err := scopedMgr.MarkUsed(ns, addr)
 			if err != nil {
 				return err
