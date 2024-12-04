@@ -192,12 +192,12 @@ func doInit(config *BtcwalletConfig) (*wallet.Wallet, error) {
 		}
 		if changeAddress != nil {
 			log.Infof("Change address: %s", changeAddress.Address())
-			if err == nil {
+			/*if err == nil {
 				stroomBirthday, err := w.GetBlockStamp(config.StartHeight)
 				if err == nil {
 					_ = w.RescanFor(changeAddress.Address(), stroomBirthday)
 				}
-			}
+			}*/
 		}
 
 		w.ChangeAddressKey = changeAddressKey
