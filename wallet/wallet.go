@@ -1050,9 +1050,12 @@ func newFilterBlocksRequest(w *Wallet, batch []wtxmgr.BlockMeta, scopedMgrs map[
 
 	addresses, err := w.AccountAddresses(waddrmgr.ImportedAddrAccount)
 	if err == nil {
+		log.Infof("newFilterBlocksRequest: imported addresses size: %v", len(addresses))
 		for _, addr := range addresses {
 			log.Infof("newFilterBlocksRequest: address %v", addr)
 		}
+	} else {
+		log.Errorf("newFilterBlocksRequest: error getting imported addresses: %v", err)
 	}
 
 	// Populate the external and internal addresses by merging the addresses
@@ -1074,7 +1077,10 @@ func newFilterBlocksRequest(w *Wallet, batch []wtxmgr.BlockMeta, scopedMgrs map[
 		}
 
 		for index, addr := range scopeState.InternalBranch.Addrs() {
-			log.Infof("InternalBranch address for scope %v: %v matches an imported address", scope, addr)
+			present := isPresent(addresses, addr)
+			if present {
+				log.Infof("InternalBranch address for scope %v: %v matches an imported address", scope, addr)
+			}
 			scopedIndex := waddrmgr.ScopedIndex{
 				Scope: scope,
 				Index: index,
