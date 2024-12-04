@@ -1055,8 +1055,8 @@ func newFilterBlocksRequest(w *Wallet, batch []wtxmgr.BlockMeta, scopedMgrs map[
 
 		log.Infof("Recovery state for scope %v: %v", scope, scopeState)
 
-		addresses, err := w.AccountAddresses(waddrmgr.ImportedAddrAccount)
-		if err == nil {
+		addresses, _ := w.AccountAddresses(waddrmgr.ImportedAddrAccount)
+		/*if err == nil {
 			for index, addr := range addresses {
 				log.Infof("ImportedAddrAccount address for scope %v: %v", scope, addr)
 				scopedIndex := waddrmgr.ScopedIndex{
@@ -1065,10 +1065,16 @@ func newFilterBlocksRequest(w *Wallet, batch []wtxmgr.BlockMeta, scopedMgrs map[
 				}
 				filterReq.ExternalAddrs[scopedIndex] = addr
 			}
-		}
+		}*/
 
-		for _, externalBranchAddress := range scopeState.ExternalBranch.Addrs() {
-			log.Infof("ExternalBranch address present: %v", isPresent(addresses, externalBranchAddress))
+		for index, addr := range scopeState.ExternalBranch.Addrs() {
+			log.Infof("ExternalBranch address present: %v", isPresent(addresses, addr))
+			scopedIndex := waddrmgr.ScopedIndex{
+				Scope: scope,
+				Index: index,
+			}
+			filterReq.ExternalAddrs[scopedIndex] = addr
+
 		}
 
 		for index, addr := range scopeState.InternalBranch.Addrs() {
@@ -1085,6 +1091,9 @@ func newFilterBlocksRequest(w *Wallet, batch []wtxmgr.BlockMeta, scopedMgrs map[
 }
 
 func isPresent(addresses []btcutil.Address, externalBranchAddress btcutil.Address) bool {
+	if addresses == nil || externalBranchAddress == nil {
+		return false
+	}
 	for _, addr := range addresses {
 		if addr.EncodeAddress() == externalBranchAddress.EncodeAddress() {
 			return true
@@ -4321,4 +4330,26 @@ func (w *Wallet) GetSignerPublicKeys() (*btcec.PublicKey, *btcec.PublicKey, erro
 	}
 
 	return w.Pk1, w.Pk2, nil
+}
+
+func (w *Wallet) GetBlockStamp(height uint64) (*waddrmgr.BlockStamp, error) {
+	client := w.ChainClient()
+	if client == nil {
+		return nil, errors.New("wallet is not associated with a consensus RPC client")
+	}
+
+	hash, err := client.GetBlockHash(int64(height))
+	if err != nil {
+		return nil, err
+	}
+	header, err := client.GetBlockHeader(hash)
+	if err != nil {
+		return nil, err
+	}
+
+	return &waddrmgr.BlockStamp{
+		Height:    int32(height),
+		Hash:      header.BlockHash(),
+		Timestamp: header.Timestamp,
+	}, nil
 }
