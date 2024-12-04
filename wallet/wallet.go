@@ -4333,25 +4333,3 @@ func (w *Wallet) GetSignerPublicKeys() (*btcec.PublicKey, *btcec.PublicKey, erro
 
 	return w.Pk1, w.Pk2, nil
 }
-
-func (w *Wallet) GetBlockStamp(height uint64) (*waddrmgr.BlockStamp, error) {
-	client := w.ChainClient()
-	if client == nil {
-		return nil, errors.New("wallet is not associated with a consensus RPC client")
-	}
-
-	hash, err := client.GetBlockHash(int64(height))
-	if err != nil {
-		return nil, err
-	}
-	header, err := client.GetBlockHeader(hash)
-	if err != nil {
-		return nil, err
-	}
-
-	return &waddrmgr.BlockStamp{
-		Height:    int32(height),
-		Hash:      header.BlockHash(),
-		Timestamp: header.Timestamp,
-	}, nil
-}

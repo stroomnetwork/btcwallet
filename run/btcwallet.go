@@ -38,11 +38,10 @@ type BtcwalletConfig struct {
 	Config         *Config
 	InitTimeout    time.Duration
 	FeeCoefficient float64
-	StartHeight    uint64
 }
 
 func NewBtcwalletConfig(signer frost.Signer, pk1, pk2 *btcec.PublicKey, bitcoindConfig *chain.BitcoindConfig,
-	config *Config, initTimeout time.Duration, feeCoefficient float64, startHeight uint64) *BtcwalletConfig {
+	config *Config, initTimeout time.Duration, feeCoefficient float64) *BtcwalletConfig {
 
 	return &BtcwalletConfig{
 		Signer:         signer,
@@ -52,7 +51,6 @@ func NewBtcwalletConfig(signer frost.Signer, pk1, pk2 *btcec.PublicKey, bitcoind
 		Config:         config,
 		InitTimeout:    initTimeout,
 		FeeCoefficient: feeCoefficient,
-		StartHeight:    startHeight,
 	}
 }
 
@@ -192,12 +190,6 @@ func doInit(config *BtcwalletConfig) (*wallet.Wallet, error) {
 		}
 		if changeAddress != nil {
 			log.Infof("Change address: %s", changeAddress.Address())
-			/*if err == nil {
-				stroomBirthday, err := w.GetBlockStamp(config.StartHeight)
-				if err == nil {
-					_ = w.RescanFor(changeAddress.Address(), stroomBirthday)
-				}
-			}*/
 		}
 
 		w.ChangeAddressKey = changeAddressKey
