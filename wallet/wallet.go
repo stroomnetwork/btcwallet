@@ -1053,8 +1053,6 @@ func newFilterBlocksRequest(w *Wallet, batch []wtxmgr.BlockMeta, scopedMgrs map[
 	for scope := range scopedMgrs {
 		scopeState := recoveryState.StateForScope(scope)
 
-		log.Infof("Recovery state for scope %v: %v", scope, scopeState)
-
 		addresses, _ := w.AccountAddresses(waddrmgr.ImportedAddrAccount)
 		/*if err == nil {
 			for index, addr := range addresses {
@@ -1068,8 +1066,10 @@ func newFilterBlocksRequest(w *Wallet, batch []wtxmgr.BlockMeta, scopedMgrs map[
 		}*/
 
 		for index, addr := range scopeState.ExternalBranch.Addrs() {
-			log.Infof("ExternalBranch address %v present=%v, scope: %v",
-				addr, isPresent(addresses, addr), scope)
+			present := isPresent(addresses, addr)
+			if present {
+				log.Infof("ExternalBranch address for scope %v: %v matches an imported address", scope, addr)
+			}
 			scopedIndex := waddrmgr.ScopedIndex{
 				Scope: scope,
 				Index: index,
@@ -1079,7 +1079,7 @@ func newFilterBlocksRequest(w *Wallet, batch []wtxmgr.BlockMeta, scopedMgrs map[
 		}
 
 		for index, addr := range scopeState.InternalBranch.Addrs() {
-			log.Infof("InternalBranch address for scope %v: %v", scope, addr)
+			log.Infof("InternalBranch address for scope %v: %v matches an imported address", scope, addr)
 			scopedIndex := waddrmgr.ScopedIndex{
 				Scope: scope,
 				Index: index,
