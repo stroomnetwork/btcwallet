@@ -1067,6 +1067,10 @@ func newFilterBlocksRequest(w *Wallet, batch []wtxmgr.BlockMeta, scopedMgrs map[
 			}
 		}
 
+		for _, externalBranchAddress := range scopeState.ExternalBranch.Addrs() {
+			log.Infof("ExternalBranch address present: %v", isPresent(addresses, externalBranchAddress))
+		}
+
 		for index, addr := range scopeState.InternalBranch.Addrs() {
 			log.Infof("InternalBranch address for scope %v: %v", scope, addr)
 			scopedIndex := waddrmgr.ScopedIndex{
@@ -1078,6 +1082,15 @@ func newFilterBlocksRequest(w *Wallet, batch []wtxmgr.BlockMeta, scopedMgrs map[
 	}
 
 	return filterReq
+}
+
+func isPresent(addresses []btcutil.Address, externalBranchAddress btcutil.Address) bool {
+	for _, addr := range addresses {
+		if addr.EncodeAddress() == externalBranchAddress.EncodeAddress() {
+			return true
+		}
+	}
+	return false
 }
 
 // extendFoundAddresses accepts a filter blocks response that contains addresses
