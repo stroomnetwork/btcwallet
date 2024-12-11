@@ -134,6 +134,8 @@ type Wallet struct {
 	FrostSigner      frost.Signer
 	ChangeAddressKey *btcec.PublicKey
 
+	LogTxCreation bool
+
 	AddressMapStorage *AddressMapStorage
 	Pk1, Pk2          *btcec.PublicKey
 	FeeCoefficient    float64
@@ -3550,12 +3552,28 @@ func (w *Wallet) SendOutputs(outputs []*wire.TxOut, keyScope *waddrmgr.KeyScope,
 	)
 }
 
-func (w *Wallet) SendOutputsWithData(outputs []*wire.TxOut, keyScope *waddrmgr.KeyScope,
+func (w *Wallet) SendOutputsWithDataAndRedeemIdCheck(outputs []*wire.TxOut, keyScope *waddrmgr.KeyScope,
 	account uint32, minconf int32, satPerKb btcutil.Amount,
+<<<<<<< HEAD
 	coinSelectionStrategy CoinSelectionStrategy, label string, data []byte) (*wire.MsgTx, error) {
+=======
+	coinSelectionStrategy CoinSelectionStrategy, label string, redeemId uint32, start, end *BlockIdentifier, data []byte) (*wire.MsgTx,
+	error) {
+>>>>>>> refs/heads/tx-creation-logs-diabled-by-default
+
+	isSpent, hash, err := w.IsRedeemIdAlreadySpent(redeemId, start, end)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if isSpent {
+		return nil, fmt.Errorf("redemption id %d already spent in tx %s", redeemId, hash)
+	}
 
 	return w.sendOutputs(
 		outputs, keyScope, account, minconf, satPerKb,
+<<<<<<< HEAD
 		coinSelectionStrategy, label, 0, data,
 	)
 }
@@ -3577,6 +3595,8 @@ func (w *Wallet) SendOutputsWithDataAndRedeemIdCheck(outputs []*wire.TxOut, keyS
 
 	return w.sendOutputs(
 		outputs, keyScope, account, minconf, satPerKb,
+=======
+>>>>>>> refs/heads/tx-creation-logs-diabled-by-default
 		coinSelectionStrategy, label, redeemId, data,
 	)
 }
