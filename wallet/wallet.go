@@ -875,7 +875,7 @@ expandHorizons:
 	// construct the filter blocks request. The request includes the range
 	// of blocks we intend to scan, in addition to the scope-index -> addr
 	// map for all internal and external branches.
-	filterReq := newFilterBlocksRequest(w, batch, scopedMgrs, recoveryState)
+	filterReq := newFilterBlocksRequest(batch, scopedMgrs, recoveryState)
 
 	// Initiate the filter blocks request using our chain backend. If an
 	// error occurs, we are unable to proceed with the recovery.
@@ -1041,7 +1041,8 @@ func internalKeyPath(index uint32) waddrmgr.DerivationPath {
 
 // newFilterBlocksRequest constructs FilterBlocksRequests using our current
 // block range, scoped managers, and recovery state.
-func newFilterBlocksRequest(w *Wallet, batch []wtxmgr.BlockMeta, scopedMgrs map[waddrmgr.KeyScope]*waddrmgr.ScopedKeyManager, recoveryState *RecoveryState) *chain.FilterBlocksRequest {
+func newFilterBlocksRequest(batch []wtxmgr.BlockMeta, scopedMgrs map[waddrmgr.KeyScope]*waddrmgr.ScopedKeyManager,
+	recoveryState *RecoveryState) *chain.FilterBlocksRequest {
 
 	filterReq := &chain.FilterBlocksRequest{
 		Blocks:           batch,
@@ -1050,26 +1051,12 @@ func newFilterBlocksRequest(w *Wallet, batch []wtxmgr.BlockMeta, scopedMgrs map[
 		WatchedOutPoints: recoveryState.WatchedOutPoints(),
 	}
 
-	addresses, err := w.AccountAddresses(waddrmgr.ImportedAddrAccount)
-	if err == nil {
-		log.Infof("newFilterBlocksRequest: imported addresses size: %v", len(addresses))
-		for _, addr := range addresses {
-			log.Infof("newFilterBlocksRequest: address %v", addr)
-		}
-	} else {
-		log.Errorf("newFilterBlocksRequest: error getting imported addresses: %v", err)
-	}
-
 	// Populate the external and internal addresses by merging the addresses
 	// sets belong to all currently tracked scopes.
 	for scope := range scopedMgrs {
 		scopeState := recoveryState.StateForScope(scope)
 
 		for index, addr := range scopeState.ExternalBranch.Addrs() {
-			present := isPresent(addresses, addr)
-			if present {
-				log.Infof("ExternalBranch address for scope %v: %v matches an imported address", scope, addr)
-			}
 			scopedIndex := waddrmgr.ScopedIndex{
 				Scope: scope,
 				Index: index,
@@ -1079,10 +1066,6 @@ func newFilterBlocksRequest(w *Wallet, batch []wtxmgr.BlockMeta, scopedMgrs map[
 		}
 
 		for index, addr := range scopeState.InternalBranch.Addrs() {
-			present := isPresent(addresses, addr)
-			if present {
-				log.Infof("InternalBranch address for scope %v: %v matches an imported address", scope, addr)
-			}
 			scopedIndex := waddrmgr.ScopedIndex{
 				Scope: scope,
 				Index: index,
@@ -1092,18 +1075,6 @@ func newFilterBlocksRequest(w *Wallet, batch []wtxmgr.BlockMeta, scopedMgrs map[
 	}
 
 	return filterReq
-}
-
-func isPresent(addresses []btcutil.Address, externalBranchAddress btcutil.Address) bool {
-	if addresses == nil || externalBranchAddress == nil {
-		return false
-	}
-	for _, addr := range addresses {
-		if addr.EncodeAddress() == externalBranchAddress.EncodeAddress() {
-			return true
-		}
-	}
-	return false
 }
 
 // extendFoundAddresses accepts a filter blocks response that contains addresses
@@ -3554,32 +3525,6 @@ func (w *Wallet) SendOutputs(outputs []*wire.TxOut, keyScope *waddrmgr.KeyScope,
 
 func (w *Wallet) SendOutputsWithDataAndRedeemIdCheck(outputs []*wire.TxOut, keyScope *waddrmgr.KeyScope,
 	account uint32, minconf int32, satPerKb btcutil.Amount,
-<<<<<<< HEAD
-	coinSelectionStrategy CoinSelectionStrategy, label string, data []byte) (*wire.MsgTx, error) {
-=======
-	coinSelectionStrategy CoinSelectionStrategy, label string, redeemId uint32, start, end *BlockIdentifier, data []byte) (*wire.MsgTx,
-	error) {
->>>>>>> refs/heads/tx-creation-logs-diabled-by-default
-
-	isSpent, hash, err := w.IsRedeemIdAlreadySpent(redeemId, start, end)
-
-	if err != nil {
-		return nil, err
-	}
-
-	if isSpent {
-		return nil, fmt.Errorf("redemption id %d already spent in tx %s", redeemId, hash)
-	}
-
-	return w.sendOutputs(
-		outputs, keyScope, account, minconf, satPerKb,
-<<<<<<< HEAD
-		coinSelectionStrategy, label, 0, data,
-	)
-}
-
-func (w *Wallet) SendOutputsWithDataAndRedeemIdCheck(outputs []*wire.TxOut, keyScope *waddrmgr.KeyScope,
-	account uint32, minconf int32, satPerKb btcutil.Amount,
 	coinSelectionStrategy CoinSelectionStrategy, label string, redeemId uint32, start, end *BlockIdentifier, data []byte) (*wire.MsgTx,
 	error) {
 
@@ -3595,8 +3540,6 @@ func (w *Wallet) SendOutputsWithDataAndRedeemIdCheck(outputs []*wire.TxOut, keyS
 
 	return w.sendOutputs(
 		outputs, keyScope, account, minconf, satPerKb,
-=======
->>>>>>> refs/heads/tx-creation-logs-diabled-by-default
 		coinSelectionStrategy, label, redeemId, data,
 	)
 }
