@@ -28,29 +28,8 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestImportAddress(t *testing.T) {
-	// Set up 2 btcd miners.
-	miner1, miner2 := setupMiners(t)
-	addr := miner1.P2PAddress()
-
-	require.NotNil(t, miner1)
-	require.NotNil(t, miner2)
-
-	// Set up a bitcoind node and connect it to miner 1.
-	cfg := setupBitcoind(t, addr)
-
-	btcWallet := createBtcWallet(t, cfg)
-
-	time.Sleep(3 * time.Second)
-
-	require.True(t, btcWallet.ChainSynced(), "wallet not synced")
-
-	verifyChangeAddress(t, miner1, btcWallet)
-	verifyImportAddressAndDoDeposit(t, miner1, btcWallet)
-	verifyDepositBeforeImportAddress(t, miner1, btcWallet)
-}
-
-func verifyChangeAddress(t *testing.T, miner *rpctest.Harness, btcWallet *wallet.Wallet) {
+func TestDepositOnChangeAddress(t *testing.T) {
+	miner, _, btcWallet := setup(t)
 	accounts, err := btcWallet.Accounts(waddrmgr.KeyScopeBIP0086)
 	require.NoError(t, err)
 	require.Equal(t, 2, len(accounts.Accounts), "wallet should have change address account (+default one)")
@@ -84,12 +63,24 @@ func verifyChangeAddress(t *testing.T, miner *rpctest.Harness, btcWallet *wallet
 	require.Equal(t, btcutil.Amount(125000), balance, "wallet should receive satoshi from miner1")
 }
 
-func verifyImportAddressAndDoDeposit(t *testing.T, miner *rpctest.Harness, btcWallet *wallet.Wallet) {
-	t.Log("implement me")
-}
+func setup(t *testing.T) (*rpctest.Harness, *rpctest.Harness, *wallet.Wallet) {
+	// Set up 2 btcd miners.
+	miner1, miner2 := setupMiners(t)
+	addr := miner1.P2PAddress()
 
-func verifyDepositBeforeImportAddress(t *testing.T, miner *rpctest.Harness, btcWallet *wallet.Wallet) {
-	t.Log("implement me")
+	require.NotNil(t, miner1)
+	require.NotNil(t, miner2)
+
+	// Set up a bitcoind node and connect it to miner 1.
+	cfg := setupBitcoind(t, addr)
+
+	btcWallet := createBtcWallet(t, cfg)
+
+	time.Sleep(3 * time.Second)
+
+	require.True(t, btcWallet.ChainSynced(), "wallet not synced")
+
+	return miner1, miner2, btcWallet
 }
 
 func createBtcWallet(t *testing.T, cfg *chain.BitcoindConfig) *wallet.Wallet {
