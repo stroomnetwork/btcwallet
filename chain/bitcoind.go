@@ -26,7 +26,6 @@ func SetupBitcoind(cfg *BitcoindConfig) (*BitcoindClient, error) {
 
 	select {
 	case chainConn := <-c:
-		log.Debug("Starting bitcoind connection...")
 		if err := chainConn.Start(); err != nil {
 			return nil, err
 		}
