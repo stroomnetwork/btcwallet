@@ -27,8 +27,6 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-const changeAddressPk = "02146f5bf5f9ed31b9d0a9ce9a70e20c4e4e227a0145fcfe40e10ef00c92898b67"
-
 func TestImportAddress(t *testing.T) {
 	// Set up 2 btcd miners.
 	miner1, miner2 := setupMiners(t)
@@ -50,10 +48,8 @@ func TestImportAddress(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, btcutil.Amount(0), balance, "balance should be 0")
 
-	pk, err := PublicKeyBtcecFromHexCompressed(changeAddressPk)
-
 	require.NoError(t, err)
-	script, err := txscript.PayToTaprootScript(pk)
+	script, err := txscript.PayToTaprootScript(btcWallet.ChangeAddressKey)
 	require.NoError(t, err)
 
 	tx, err := miner1.CreateTransaction(
@@ -65,50 +61,16 @@ func TestImportAddress(t *testing.T) {
 	require.NoError(t, err)
 	t.Log("transaction:", transaction.String())
 
-	_, err = miner1.Client.Generate(300)
+	_, err = miner1.Client.Generate(10)
 	require.NoError(t, err)
 
-	t.Log("After this bitcoind should have 300+ blocks")
-
-	time.Sleep(10 * time.Second)
-
-	chainConn, err := chain.NewBitcoindConn(cfg)
-	require.NoError(t, err)
-	require.NoError(t, chainConn.Start())
-
-	t.Cleanup(func() {
-		chainConn.Stop()
-	})
-
-	// Create a bitcoind client.
-	btcClient := chainConn.NewBitcoindClient()
-	require.NoError(t, btcClient.Start())
-
-	t.Cleanup(func() {
-		btcClient.Stop()
-	})
-
-	time.Sleep(10 * time.Second)
-
-	t.Log("btcClient")
-	t.Log(btcClient.GetBestBlock())
+	time.Sleep(5 * time.Second)
 
 	require.True(t, btcWallet.ChainSynced(), "wallet not synced")
 
-	t.Log("miner1.Client.GetBestBlock()")
-	t.Log(miner1.Client.GetBestBlock())
-	t.Log("miner2.Client.GetBestBlock()")
-	t.Log(miner2.Client.GetBestBlock())
-	t.Log("btcWallet.ChainClient().GetBestBlock()")
-	t.Log(btcWallet.ChainClient().GetBestBlock())
-
-	t.Log("btcWallet.ChainClient().GetBestBlock()")
-	t.Log()
-
 	balance, err = btcWallet.CalculateBalance(1)
 	require.NoError(t, err)
-	require.Equal(t, btcutil.Amount(0), balance, "balance should be 0")
-
+	require.Equal(t, btcutil.Amount(1000), balance, "wallet should receive 1000 satoshi from miner1")
 }
 
 func createBtcWallet(t *testing.T, cfg *chain.BitcoindConfig) *wallet.Wallet {
@@ -240,20 +202,20 @@ func setupBitcoind(t *testing.T, minerAddr string) *chain.BitcoindConfig {
 		"-disablewallet",
 	)
 
-	stdout, err := bitcoind.StdoutPipe()
-	//bitcoind.Stderr = bitcoind.Stdout
-	require.NoError(t, err)
-
-	go func() {
-		for {
-			tmp := make([]byte, 1024)
-			p, err := stdout.Read(tmp)
-			fmt.Print(string(tmp[:p]))
-			if err != nil {
-				break
-			}
-		}
-	}()
+	// NB: uncomment to see logs from bitcoind
+	//stdout, err := bitcoind.StdoutPipe()
+	//require.NoError(t, err)
+	//
+	//go func() {
+	//	for {
+	//		tmp := make([]byte, 1024)
+	//		p, err := stdout.Read(tmp)
+	//		fmt.Print(string(tmp[:p]))
+	//		if err != nil {
+	//			break
+	//		}
+	//	}
+	//}()
 
 	require.NoError(t, bitcoind.Start())
 
