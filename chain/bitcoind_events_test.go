@@ -19,7 +19,6 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// temp disabled
 // TestBitcoindEvents ensures that the BitcoindClient correctly delivers tx and
 // block notifications for both the case where a ZMQ subscription is used and
 // for the case where RPC polling is used.
