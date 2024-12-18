@@ -10,6 +10,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stroomnetwork/btcwallet/cfgutil"
 	"github.com/stroomnetwork/btcwallet/chain"
+	"github.com/stroomnetwork/btcwallet/waddrmgr"
 	"github.com/stroomnetwork/btcwallet/wallet"
 	"github.com/stroomnetwork/frost"
 	"github.com/stroomnetwork/frost/crypto"
@@ -40,37 +41,55 @@ func TestImportAddress(t *testing.T) {
 
 	btcWallet := createBtcWallet(t, cfg)
 
-	time.Sleep(5 * time.Second)
+	time.Sleep(3 * time.Second)
 
 	require.True(t, btcWallet.ChainSynced(), "wallet not synced")
+
+	verifyChangeAddress(t, miner1, btcWallet)
+	verifyImportAddressAndDoDeposit(t, miner1, btcWallet)
+	verifyDepositBeforeImportAddress(t, miner1, btcWallet)
+}
+
+func verifyChangeAddress(t *testing.T, miner *rpctest.Harness, btcWallet *wallet.Wallet) {
+	accounts, err := btcWallet.Accounts(waddrmgr.KeyScopeBIP0086)
+	require.NoError(t, err)
+	require.Equal(t, 2, len(accounts.Accounts), "wallet should have change address account (+default one)")
 
 	balance, err := btcWallet.CalculateBalance(1)
 	require.NoError(t, err)
 	require.Equal(t, btcutil.Amount(0), balance, "balance should be 0")
 
+	p2shAddr, err := txscript.PayToTaprootScript(btcWallet.ChangeAddressKey)
 	require.NoError(t, err)
-	script, err := txscript.PayToTaprootScript(btcWallet.ChangeAddressKey)
-	require.NoError(t, err)
+	require.NotNil(t, p2shAddr)
 
-	tx, err := miner1.CreateTransaction(
-		[]*wire.TxOut{{Value: 1000, PkScript: script}}, 5, false,
+	tx, err := miner.CreateTransaction(
+		[]*wire.TxOut{wire.NewTxOut(125000, p2shAddr)}, 5, false,
 	)
 	require.NoError(t, err)
 
-	transaction, err := miner1.Client.SendRawTransaction(tx, true)
+	transaction, err := miner.Client.SendRawTransaction(tx, true)
 	require.NoError(t, err)
-	t.Log("transaction:", transaction.String())
+	t.Log("payout transaction:", transaction.String())
 
-	_, err = miner1.Client.Generate(10)
+	_, err = miner.Client.Generate(3)
 	require.NoError(t, err)
 
-	time.Sleep(5 * time.Second)
+	time.Sleep(2 * time.Second)
 
 	require.True(t, btcWallet.ChainSynced(), "wallet not synced")
 
 	balance, err = btcWallet.CalculateBalance(1)
 	require.NoError(t, err)
-	require.Equal(t, btcutil.Amount(1000), balance, "wallet should receive 1000 satoshi from miner1")
+	require.Equal(t, btcutil.Amount(125000), balance, "wallet should receive satoshi from miner1")
+}
+
+func verifyImportAddressAndDoDeposit(t *testing.T, miner *rpctest.Harness, btcWallet *wallet.Wallet) {
+	t.Log("implement me")
+}
+
+func verifyDepositBeforeImportAddress(t *testing.T, miner *rpctest.Harness, btcWallet *wallet.Wallet) {
+	t.Log("implement me")
 }
 
 func createBtcWallet(t *testing.T, cfg *chain.BitcoindConfig) *wallet.Wallet {
