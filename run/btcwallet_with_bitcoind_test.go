@@ -1,8 +1,10 @@
 package run
 
 import (
+	"encoding/hex"
 	"fmt"
 	"github.com/btcsuite/btcd/integration/rpctest"
+	"github.com/btcsuite/btcd/wire"
 	"github.com/btcsuite/btclog"
 	"github.com/btcsuite/btcwallet/wtxmgr"
 	"github.com/stretchr/testify/assert"
@@ -25,6 +27,8 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+const changeAddressPk = "02146f5bf5f9ed31b9d0a9ce9a70e20c4e4e227a0145fcfe40e10ef00c92898b67"
+
 func TestImportAddress(t *testing.T) {
 	// Set up 2 btcd miners.
 	miner1, miner2 := setupMiners(t)
@@ -39,7 +43,72 @@ func TestImportAddress(t *testing.T) {
 	btcWallet := createBtcWallet(t, cfg)
 
 	time.Sleep(5 * time.Second)
-	t.Log(btcWallet.ChainSynced())
+
+	require.True(t, btcWallet.ChainSynced(), "wallet not synced")
+
+	balance, err := btcWallet.CalculateBalance(1)
+	require.NoError(t, err)
+	require.Equal(t, btcutil.Amount(0), balance, "balance should be 0")
+
+	pk, err := PublicKeyBtcecFromHexCompressed(changeAddressPk)
+
+	require.NoError(t, err)
+	script, err := txscript.PayToTaprootScript(pk)
+	require.NoError(t, err)
+
+	tx, err := miner1.CreateTransaction(
+		[]*wire.TxOut{{Value: 1000, PkScript: script}}, 5, false,
+	)
+	require.NoError(t, err)
+
+	transaction, err := miner1.Client.SendRawTransaction(tx, true)
+	require.NoError(t, err)
+	t.Log("transaction:", transaction.String())
+
+	_, err = miner1.Client.Generate(300)
+	require.NoError(t, err)
+
+	t.Log("After this bitcoind should have 300+ blocks")
+
+	time.Sleep(10 * time.Second)
+
+	chainConn, err := chain.NewBitcoindConn(cfg)
+	require.NoError(t, err)
+	require.NoError(t, chainConn.Start())
+
+	t.Cleanup(func() {
+		chainConn.Stop()
+	})
+
+	// Create a bitcoind client.
+	btcClient := chainConn.NewBitcoindClient()
+	require.NoError(t, btcClient.Start())
+
+	t.Cleanup(func() {
+		btcClient.Stop()
+	})
+
+	time.Sleep(10 * time.Second)
+
+	t.Log("btcClient")
+	t.Log(btcClient.GetBestBlock())
+
+	require.True(t, btcWallet.ChainSynced(), "wallet not synced")
+
+	t.Log("miner1.Client.GetBestBlock()")
+	t.Log(miner1.Client.GetBestBlock())
+	t.Log("miner2.Client.GetBestBlock()")
+	t.Log(miner2.Client.GetBestBlock())
+	t.Log("btcWallet.ChainClient().GetBestBlock()")
+	t.Log(btcWallet.ChainClient().GetBestBlock())
+
+	t.Log("btcWallet.ChainClient().GetBestBlock()")
+	t.Log()
+
+	balance, err = btcWallet.CalculateBalance(1)
+	require.NoError(t, err)
+	require.Equal(t, btcutil.Amount(0), balance, "balance should be 0")
+
 }
 
 func createBtcWallet(t *testing.T, cfg *chain.BitcoindConfig) *wallet.Wallet {
@@ -170,15 +239,32 @@ func setupBitcoind(t *testing.T, minerAddr string) *chain.BitcoindConfig {
 		fmt.Sprintf("-rpcport=%d", rpcPort),
 		"-disablewallet",
 	)
+
+	stdout, err := bitcoind.StdoutPipe()
+	//bitcoind.Stderr = bitcoind.Stdout
+	require.NoError(t, err)
+
+	go func() {
+		for {
+			tmp := make([]byte, 1024)
+			p, err := stdout.Read(tmp)
+			fmt.Print(string(tmp[:p]))
+			if err != nil {
+				break
+			}
+		}
+	}()
+
 	require.NoError(t, bitcoind.Start())
 
 	t.Cleanup(func() {
 		bitcoind.Process.Kill()
 		bitcoind.Wait()
+
 	})
 
 	// Wait for the bitcoind instance to start up.
-	time.Sleep(time.Second)
+	time.Sleep(5 * time.Second)
 
 	host := fmt.Sprintf("127.0.0.1:%d", rpcPort)
 	cfg := &chain.BitcoindConfig{
@@ -222,4 +308,35 @@ func randPubKeyHashScript() ([]byte, *btcec.PrivateKey, error) {
 	}
 
 	return pkScript, privKey, nil
+}
+
+func PublicKeyBtcecFromHexCompressed(hexKey string) (*btcec.PublicKey, error) {
+	keyBytes, err := hexToBytes(hexKey, 33)
+	if err != nil {
+		return nil, err
+	}
+
+	if keyBytes[0] != 0x02 && keyBytes[0] != 0x03 {
+		return nil, fmt.Errorf("invalid public key format: hex=%v: must start with 0x02 or 0x03", hexKey)
+	}
+
+	key, err := btcec.ParsePubKey(keyBytes)
+	if err != nil {
+		return nil, fmt.Errorf("cannot convert bytes to btcec public key: hex=%v: %w", hexKey, err)
+	}
+
+	return key, nil
+}
+
+func hexToBytes(hexString string, byteLength int) ([]byte, error) {
+	keyBytes, err := hex.DecodeString(hexString)
+	if err != nil {
+		return nil, fmt.Errorf("cannot decode hex to bytes: hex=%v: %w", hexString, err)
+	}
+
+	if len(keyBytes) != byteLength {
+		return nil, fmt.Errorf("invalid length: must be %d bytes, got %d bytes", byteLength, len(keyBytes))
+	}
+
+	return keyBytes, nil
 }
