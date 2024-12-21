@@ -430,8 +430,6 @@ func (w *Wallet) ImportPublicKeyReturnAddress(pubKey *btcec.PublicKey, addrType 
 		return nil, err
 	}
 
-	log.Infof("Imported address %v", addr.Address())
-
 	err = w.chainClient.NotifyReceived([]btcutil.Address{addr.Address()})
 	if err != nil {
 		return nil, fmt.Errorf("unable to subscribe for address "+
