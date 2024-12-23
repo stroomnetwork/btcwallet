@@ -477,10 +477,9 @@ func (w *Wallet) findEligibleOutputs(dbtx walletdb.ReadTx,
 				addrAcct, account, output)
 			continue
 		}
-		w.logTxCreation("eligible output: %v, amount:%v", output, output.Amount)
 		eligible = append(eligible, *output)
 	}
-	w.logTxCreation("eligible size: %v", len(eligible))
+	w.logTxCreation("eligible outputs size: %v", len(eligible))
 	return eligible, nil
 }
 
