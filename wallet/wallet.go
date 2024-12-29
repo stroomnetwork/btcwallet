@@ -134,6 +134,8 @@ type Wallet struct {
 	FrostSigner      frost.Signer
 	ChangeAddressKey *btcec.PublicKey
 
+	LogTxCreation bool
+
 	AddressMapStorage *AddressMapStorage
 	Pk1, Pk2          *btcec.PublicKey
 	FeeCoefficient    float64
@@ -159,6 +161,7 @@ type Wallet struct {
 	rescanProgress      chan *RescanProgressMsg
 	rescanFinished      chan *RescanFinishedMsg
 	rescanLock          sync.Mutex
+	RescanStartStamp    *waddrmgr.BlockStamp
 
 	// Channel for transaction creation requests.
 	createTxRequests chan createTxRequest
@@ -275,9 +278,25 @@ func (w *Wallet) requireChainClient() (chain.Interface, error) {
 // the wallet.
 func (w *Wallet) ChainClient() chain.Interface {
 	w.chainClientLock.Lock()
-	chainClient := w.chainClient
-	w.chainClientLock.Unlock()
-	return chainClient
+	defer w.chainClientLock.Unlock()
+	return w.chainClient
+}
+
+func (w *Wallet) GetBlockStamp(height uint64) (*waddrmgr.BlockStamp, error) {
+	hash, err := w.ChainClient().GetBlockHash(int64(height))
+	if err != nil {
+		return nil, err
+	}
+	header, err := w.ChainClient().GetBlockHeader(hash)
+	if err != nil {
+		return nil, err
+	}
+
+	return &waddrmgr.BlockStamp{
+		Height:    int32(height),
+		Hash:      header.BlockHash(),
+		Timestamp: header.Timestamp,
+	}, nil
 }
 
 // quitChan atomically reads the quit channel.
@@ -574,7 +593,7 @@ func (w *Wallet) syncWithChain(birthdayStamp *waddrmgr.BlockStamp) error {
 		return err
 	}
 
-	return w.rescanWithTarget(addrs, unspent, nil)
+	return w.rescanWithTarget(addrs, unspent, w.RescanStartStamp)
 }
 
 // isDevEnv determines whether the wallet is currently under a local developer
@@ -868,7 +887,7 @@ expandHorizons:
 	// construct the filter blocks request. The request includes the range
 	// of blocks we intend to scan, in addition to the scope-index -> addr
 	// map for all internal and external branches.
-	filterReq := newFilterBlocksRequest(w, batch, scopedMgrs, recoveryState)
+	filterReq := newFilterBlocksRequest(batch, scopedMgrs, recoveryState)
 
 	// Initiate the filter blocks request using our chain backend. If an
 	// error occurs, we are unable to proceed with the recovery.
@@ -1034,7 +1053,8 @@ func internalKeyPath(index uint32) waddrmgr.DerivationPath {
 
 // newFilterBlocksRequest constructs FilterBlocksRequests using our current
 // block range, scoped managers, and recovery state.
-func newFilterBlocksRequest(w *Wallet, batch []wtxmgr.BlockMeta, scopedMgrs map[waddrmgr.KeyScope]*waddrmgr.ScopedKeyManager, recoveryState *RecoveryState) *chain.FilterBlocksRequest {
+func newFilterBlocksRequest(batch []wtxmgr.BlockMeta, scopedMgrs map[waddrmgr.KeyScope]*waddrmgr.ScopedKeyManager,
+	recoveryState *RecoveryState) *chain.FilterBlocksRequest {
 
 	filterReq := &chain.FilterBlocksRequest{
 		Blocks:           batch,
@@ -1043,26 +1063,12 @@ func newFilterBlocksRequest(w *Wallet, batch []wtxmgr.BlockMeta, scopedMgrs map[
 		WatchedOutPoints: recoveryState.WatchedOutPoints(),
 	}
 
-	addresses, err := w.AccountAddresses(waddrmgr.ImportedAddrAccount)
-	if err == nil {
-		log.Infof("newFilterBlocksRequest: imported addresses size: %v", len(addresses))
-		for _, addr := range addresses {
-			log.Infof("newFilterBlocksRequest: address %v", addr)
-		}
-	} else {
-		log.Errorf("newFilterBlocksRequest: error getting imported addresses: %v", err)
-	}
-
 	// Populate the external and internal addresses by merging the addresses
 	// sets belong to all currently tracked scopes.
 	for scope := range scopedMgrs {
 		scopeState := recoveryState.StateForScope(scope)
 
 		for index, addr := range scopeState.ExternalBranch.Addrs() {
-			present := isPresent(addresses, addr)
-			if present {
-				log.Infof("ExternalBranch address for scope %v: %v matches an imported address", scope, addr)
-			}
 			scopedIndex := waddrmgr.ScopedIndex{
 				Scope: scope,
 				Index: index,
@@ -1072,10 +1078,6 @@ func newFilterBlocksRequest(w *Wallet, batch []wtxmgr.BlockMeta, scopedMgrs map[
 		}
 
 		for index, addr := range scopeState.InternalBranch.Addrs() {
-			present := isPresent(addresses, addr)
-			if present {
-				log.Infof("InternalBranch address for scope %v: %v matches an imported address", scope, addr)
-			}
 			scopedIndex := waddrmgr.ScopedIndex{
 				Scope: scope,
 				Index: index,
@@ -1085,18 +1087,6 @@ func newFilterBlocksRequest(w *Wallet, batch []wtxmgr.BlockMeta, scopedMgrs map[
 	}
 
 	return filterReq
-}
-
-func isPresent(addresses []btcutil.Address, externalBranchAddress btcutil.Address) bool {
-	if addresses == nil || externalBranchAddress == nil {
-		return false
-	}
-	for _, addr := range addresses {
-		if addr.EncodeAddress() == externalBranchAddress.EncodeAddress() {
-			return true
-		}
-	}
-	return false
 }
 
 // extendFoundAddresses accepts a filter blocks response that contains addresses
@@ -3542,16 +3532,6 @@ func (w *Wallet) SendOutputs(outputs []*wire.TxOut, keyScope *waddrmgr.KeyScope,
 	return w.sendOutputs(
 		outputs, keyScope, account, minconf, satPerKb,
 		coinSelectionStrategy, label, 0, nil,
-	)
-}
-
-func (w *Wallet) SendOutputsWithData(outputs []*wire.TxOut, keyScope *waddrmgr.KeyScope,
-	account uint32, minconf int32, satPerKb btcutil.Amount,
-	coinSelectionStrategy CoinSelectionStrategy, label string, data []byte) (*wire.MsgTx, error) {
-
-	return w.sendOutputs(
-		outputs, keyScope, account, minconf, satPerKb,
-		coinSelectionStrategy, label, 0, data,
 	)
 }
 
