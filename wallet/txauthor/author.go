@@ -400,7 +400,7 @@ func spendTaprootKey(signer frost.Signer, linearCombinations map[string]*crypto.
 		return fmt.Errorf("key not found for address %v", addrs[0].String())
 	}
 
-	txData, err := SerializeTxData(NewTxData(data, pkScript, inputValue, tx, sigHashes, idx))
+	txData, err := SerializeTxData(AddInputData(data, pkScript, inputValue, tx, sigHashes, idx))
 	if err != nil {
 		return err
 	}
@@ -425,50 +425,58 @@ func spendTaprootKey(signer frost.Signer, linearCombinations map[string]*crypto.
 
 type TxData struct {
 	SignatureData []byte
-	PkScript      []byte
-	InputValue    int64
 	Tx            *wire.MsgTx
-	SigHashes     *txscript.TxSigHashes
-	Idx           int
+	inputData     []*InputData
 }
 
-func NewTxData(signatureData []byte, pkScript []byte, inputValue int64, tx *wire.MsgTx,
-	sigHashes *txscript.TxSigHashes, idx int) *TxData {
-
+func NewTxData(signatureData []byte, tx *wire.MsgTx) *TxData {
 	return &TxData{
 		SignatureData: signatureData,
-		PkScript:      pkScript,
-		InputValue:    inputValue,
 		Tx:            tx,
-		SigHashes:     sigHashes,
-		Idx:           idx,
+		inputData:     make([]*InputData, 0),
 	}
 }
 
-func NewTxDataWithSignatureDataOnly(signatureData []byte) *TxData {
-	return &TxData{
+type InputData struct {
+	PkScript   []byte
+	InputValue int64
+	SigHashes  *txscript.TxSigHashes
+	Idx        int
+}
+
+func NewInputData(pkScript []byte, inputValue int64, sigHashes *txscript.TxSigHashes, idx int) *InputData {
+	return &InputData{
+		PkScript:   pkScript,
+		InputValue: inputValue,
+		SigHashes:  sigHashes,
+		Idx:        idx,
+	}
+}
+
+func NewTxDataWithSignatureDataOnly(signatureData []byte) *InputData {
+	return &InputData{
 		SignatureData: signatureData,
 	}
 }
 
-func SerializeTxData(txData *TxData) ([]byte, error) {
+func SerializeTxData(txData *InputData) ([]byte, error) {
 	var buffer bytes.Buffer
 	encoder := gob.NewEncoder(&buffer)
 
 	err := encoder.Encode(txData)
 	if err != nil {
-		return nil, fmt.Errorf("failed to encode TxData: %w", err)
+		return nil, fmt.Errorf("failed to encode InputData: %w", err)
 	}
 
 	return buffer.Bytes(), nil
 }
 
-func DeserializeTxData(data []byte) (*TxData, error) {
-	var txData TxData
+func DeserializeTxData(data []byte) (*InputData, error) {
+	var txData InputData
 	decoder := gob.NewDecoder(bytes.NewBuffer(data))
 	err := decoder.Decode(&txData)
 	if err != nil {
-		return nil, fmt.Errorf("failed to decode TxData: %w", err)
+		return nil, fmt.Errorf("failed to decode InputData: %w", err)
 	}
 	return &txData, nil
 }
