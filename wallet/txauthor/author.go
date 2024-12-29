@@ -267,6 +267,9 @@ func AddAllInputScripts(signer frost.Signer, linearCombinations map[string]*cryp
 			"have equal length")
 	}
 
+	signDescriptors := make([]*crypto.LinearSignDescriptor, len(inputs))
+	dataPerInput := make([]*InputData, len(inputs))
+
 	for i := range inputs {
 		pkScript := prevPkScripts[i]
 
@@ -294,13 +297,15 @@ func AddAllInputScripts(signer frost.Signer, linearCombinations map[string]*cryp
 			}
 
 		case txscript.IsPayToTaproot(pkScript):
-			err := spendTaprootKey(signer, linearCombinations, data,
-				inputs[i], pkScript, int64(inputValues[i]),
+			descriptor, inputData, err := spendTaprootKey(linearCombinations, pkScript, int64(inputValues[i]),
 				chainParams, tx, hashCache, i,
 			)
 			if err != nil {
 				return err
 			}
+
+			signDescriptors[i] = descriptor
+			dataPerInput[i] = inputData
 
 		default:
 			sigScript := inputs[i].SignatureScript
@@ -312,6 +317,25 @@ func AddAllInputScripts(signer frost.Signer, linearCombinations map[string]*cryp
 			}
 			inputs[i].SignatureScript = script
 		}
+	}
+
+	txData, err := SerializeTxData(NewTxData(data, tx, dataPerInput))
+	if err != nil {
+		return err
+	}
+
+	sd := &crypto.MultiSignatureDescriptor{
+		Data:            txData,
+		SignDescriptors: signDescriptors,
+	}
+
+	signatures, err := signer.SignAdvanced(sd)
+	if err != nil {
+		return err
+	}
+
+	for i := range inputs {
+		tx.TxIn[i].Witness = wire.TxWitness{signatures[i].Serialize()}
 	}
 
 	return nil
@@ -374,9 +398,9 @@ func spendWitnessKeyHash(txIn *wire.TxIn, pkScript []byte,
 // correspond to the output value of the previous pkScript, or else verification
 // will fail since the new sighash digest algorithm defined in BIP0341 includes
 // the input value in the sighash.
-func spendTaprootKey(signer frost.Signer, linearCombinations map[string]*crypto.LinearCombination, data []byte,
-	txIn *wire.TxIn, pkScript []byte, inputValue int64, params *chaincfg.Params, tx *wire.MsgTx,
-	sigHashes *txscript.TxSigHashes, idx int) error {
+func spendTaprootKey(linearCombinations map[string]*crypto.LinearCombination, pkScript []byte, inputValue int64,
+	params *chaincfg.Params, tx *wire.MsgTx, sigHashes *txscript.TxSigHashes, idx int,
+) (*crypto.LinearSignDescriptor, *InputData, error) {
 
 	// First obtain the key pair associated with this p2tr address. If the
 	// pkScript is incorrect or derived from a different internal key or
@@ -388,39 +412,25 @@ func spendTaprootKey(signer frost.Signer, linearCombinations map[string]*crypto.
 		txscript.NewCannedPrevOutputFetcher(pkScript, inputValue),
 	)
 	if err != nil {
-		return nil
+		return nil, nil, nil
 	}
 
 	_, addrs, _, err := txscript.ExtractPkScriptAddrs(pkScript, params)
 	if err != nil {
-		return err
+		return nil, nil, err
 	}
 	lc, ok := linearCombinations[addrs[0].String()]
 	if !ok {
-		return fmt.Errorf("key not found for address %v", addrs[0].String())
+		return nil, nil, fmt.Errorf("key not found for address %v", addrs[0].String())
 	}
 
-	txData, err := SerializeTxData(AddInputData(data, pkScript, inputValue, tx, sigHashes, idx))
-	if err != nil {
-		return err
+	inputData := NewInputData(pkScript, inputValue, sigHashes, idx)
+	descriptor := &crypto.LinearSignDescriptor{
+		MsgHash: sigHash,
+		LC:      lc,
 	}
 
-	signatures, err := signer.SignAdvanced(&crypto.MultiSignatureDescriptor{
-		Data: txData,
-		SignDescriptors: []*crypto.LinearSignDescriptor{
-			{
-				MsgHash: sigHash,
-				LC:      lc,
-			},
-		},
-	})
-	if err != nil {
-		return err
-	}
-
-	txIn.Witness = wire.TxWitness{signatures[0].Serialize()}
-
-	return nil
+	return descriptor, inputData, nil
 }
 
 type TxData struct {
@@ -429,11 +439,11 @@ type TxData struct {
 	inputData     []*InputData
 }
 
-func NewTxData(signatureData []byte, tx *wire.MsgTx) *TxData {
+func NewTxData(signatureData []byte, tx *wire.MsgTx, inputData []*InputData) *TxData {
 	return &TxData{
 		SignatureData: signatureData,
 		Tx:            tx,
-		inputData:     make([]*InputData, 0),
+		inputData:     inputData,
 	}
 }
 
@@ -453,30 +463,30 @@ func NewInputData(pkScript []byte, inputValue int64, sigHashes *txscript.TxSigHa
 	}
 }
 
-func NewTxDataWithSignatureDataOnly(signatureData []byte) *InputData {
-	return &InputData{
+func NewTxDataWithSignatureDataOnly(signatureData []byte) *TxData {
+	return &TxData{
 		SignatureData: signatureData,
 	}
 }
 
-func SerializeTxData(txData *InputData) ([]byte, error) {
+func SerializeTxData(txData *TxData) ([]byte, error) {
 	var buffer bytes.Buffer
 	encoder := gob.NewEncoder(&buffer)
 
 	err := encoder.Encode(txData)
 	if err != nil {
-		return nil, fmt.Errorf("failed to encode InputData: %w", err)
+		return nil, fmt.Errorf("failed to encode TxData: %w", err)
 	}
 
 	return buffer.Bytes(), nil
 }
 
-func DeserializeTxData(data []byte) (*InputData, error) {
-	var txData InputData
+func DeserializeTxData(data []byte) (*TxData, error) {
+	var txData TxData
 	decoder := gob.NewDecoder(bytes.NewBuffer(data))
 	err := decoder.Decode(&txData)
 	if err != nil {
-		return nil, fmt.Errorf("failed to decode InputData: %w", err)
+		return nil, fmt.Errorf("failed to decode TxData: %w", err)
 	}
 	return &txData, nil
 }
