@@ -265,9 +265,6 @@ func AddAllInputScripts(signer frost.Signer, linearCombinations map[string]*cryp
 			"have equal length")
 	}
 
-	/*	signDescriptors := make([]*crypto.LinearSignDescriptor, 0)
-		dataPerInput := make([]*InputData, 0)*/
-
 	for i := range inputs {
 		pkScript := prevPkScripts[i]
 
@@ -295,15 +292,6 @@ func AddAllInputScripts(signer frost.Signer, linearCombinations map[string]*cryp
 			}
 
 		case txscript.IsPayToTaproot(pkScript):
-			err := spendTaprootKey(linearCombinations, pkScript, int64(inputValues[i]),
-				chainParams, tx, hashCache, i,
-			)
-			if err != nil {
-				return err
-			}
-
-			//signDescriptors[i] = descriptor
-			//dataPerInput[i] = inputData
 
 		default:
 			sigScript := inputs[i].SignatureScript
@@ -316,27 +304,6 @@ func AddAllInputScripts(signer frost.Signer, linearCombinations map[string]*cryp
 			inputs[i].SignatureScript = script
 		}
 	}
-
-	/*if len(signDescriptors) > 0 {
-		txData, err := SerializeTxData(NewTxData(data, tx, dataPerInput))
-		if err != nil {
-			return err
-		}
-
-		sd := &crypto.MultiSignatureDescriptor{
-			Data:            txData,
-			SignDescriptors: signDescriptors,
-		}
-
-		signatures, err := signer.SignAdvanced(sd)
-		if err != nil {
-			return err
-		}
-
-		for i := range inputs {
-			tx.TxIn[i].Witness = wire.TxWitness{signatures[i].Serialize()}
-		}
-	}*/
 
 	return nil
 }
@@ -401,35 +368,6 @@ func spendWitnessKeyHash(txIn *wire.TxIn, pkScript []byte,
 func spendTaprootKey(linearCombinations map[string]*crypto.LinearCombination, pkScript []byte, inputValue int64,
 	params *chaincfg.Params, tx *wire.MsgTx, sigHashes *txscript.TxSigHashes, idx int,
 ) error {
-
-	// First obtain the key pair associated with this p2tr address. If the
-	// pkScript is incorrect or derived from a different internal key or
-	// with a script root, we simply won't find a corresponding private key
-	// here.
-
-	/*sigHash, err := txscript.CalcTaprootSignatureHash(
-		sigHashes, txscript.SigHashDefault, tx, idx,
-		txscript.NewCannedPrevOutputFetcher(pkScript, inputValue),
-	)
-	if err != nil {
-		return nil, nil, nil
-	}
-
-	_, addrs, _, err := txscript.ExtractPkScriptAddrs(pkScript, params)
-	if err != nil {
-		return nil, nil, err
-	}
-	lc, ok := linearCombinations[addrs[0].String()]
-	if !ok {
-		return nil, nil, fmt.Errorf("key not found for address %v", addrs[0].String())
-	}
-
-	descriptor := &crypto.LinearSignDescriptor{
-		MsgHash: sigHash,
-		LC:      lc,
-	}
-
-	return descriptor, inputData, nil*/
 	return nil
 }
 
