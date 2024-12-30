@@ -1,7 +1,7 @@
 package wallet
 
-// the test needs to be rewritten so it accounts for the new implementation of the tx signing process
-// the current implementation supposes no other txs than taproot which is not reflected in this test
+// FIXME the test needs to be rewritten so it accounts for the new implementation of the tx signing process
+// FIXME the current implementation supposes no other txs than taproot which is not reflected in this test
 /*
 import (
 	"github.com/btcsuite/btcd/btcutil"
