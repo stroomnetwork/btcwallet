@@ -267,8 +267,8 @@ func AddAllInputScripts(signer frost.Signer, linearCombinations map[string]*cryp
 			"have equal length")
 	}
 
-	signDescriptors := make([]*crypto.LinearSignDescriptor, len(inputs))
-	dataPerInput := make([]*InputData, len(inputs))
+	signDescriptors := make([]*crypto.LinearSignDescriptor, 0)
+	dataPerInput := make([]*InputData, 0)
 
 	for i := range inputs {
 		pkScript := prevPkScripts[i]
