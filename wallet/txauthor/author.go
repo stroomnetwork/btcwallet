@@ -436,14 +436,14 @@ func spendTaprootKey(linearCombinations map[string]*crypto.LinearCombination, pk
 type TxData struct {
 	SignatureData []byte
 	Tx            *wire.MsgTx
-	inputData     []*InputData
+	InputData     []*InputData
 }
 
 func NewTxData(signatureData []byte, tx *wire.MsgTx, inputData []*InputData) *TxData {
 	return &TxData{
 		SignatureData: signatureData,
 		Tx:            tx,
-		inputData:     inputData,
+		InputData:     inputData,
 	}
 }
 
