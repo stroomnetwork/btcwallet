@@ -319,23 +319,25 @@ func AddAllInputScripts(signer frost.Signer, linearCombinations map[string]*cryp
 		}
 	}
 
-	txData, err := SerializeTxData(NewTxData(data, tx, dataPerInput))
-	if err != nil {
-		return err
-	}
+	if len(signDescriptors) > 0 {
+		txData, err := SerializeTxData(NewTxData(data, tx, dataPerInput))
+		if err != nil {
+			return err
+		}
 
-	sd := &crypto.MultiSignatureDescriptor{
-		Data:            txData,
-		SignDescriptors: signDescriptors,
-	}
+		sd := &crypto.MultiSignatureDescriptor{
+			Data:            txData,
+			SignDescriptors: signDescriptors,
+		}
 
-	signatures, err := signer.SignAdvanced(sd)
-	if err != nil {
-		return err
-	}
+		signatures, err := signer.SignAdvanced(sd)
+		if err != nil {
+			return err
+		}
 
-	for i := range inputs {
-		tx.TxIn[i].Witness = wire.TxWitness{signatures[i].Serialize()}
+		for i := range inputs {
+			tx.TxIn[i].Witness = wire.TxWitness{signatures[i].Serialize()}
+		}
 	}
 
 	return nil
