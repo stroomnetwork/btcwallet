@@ -11,9 +11,6 @@ import (
 	"errors"
 	"fmt"
 	"github.com/btcsuite/btcd/btcec/v2"
-	"github.com/ethereum/go-ethereum/accounts/abi"
-	"github.com/ethereum/go-ethereum/common"
-	"github.com/stroomnetwork/frost/crypto"
 	"sort"
 	"sync"
 	"sync/atomic"
@@ -35,7 +32,6 @@ import (
 	"github.com/stroomnetwork/btcwallet/chain"
 	"github.com/stroomnetwork/btcwallet/waddrmgr"
 	"github.com/stroomnetwork/btcwallet/wallet/txauthor"
-	"github.com/stroomnetwork/frost"
 )
 
 const (
@@ -128,17 +124,13 @@ type Wallet struct {
 	publicPassphrase []byte
 
 	// Data stores
-	db               walletdb.DB
-	Manager          *waddrmgr.Manager
-	TxStore          *wtxmgr.Store
-	FrostSigner      frost.Signer
-	ChangeAddressKey *btcec.PublicKey
+	db      walletdb.DB
+	Manager *waddrmgr.Manager
+	TxStore *wtxmgr.Store
 
 	LogTxCreation bool
 
-	AddressMapStorage *AddressMapStorage
-	Pk1, Pk2          *btcec.PublicKey
-	FeeCoefficient    float64
+	FeeCoefficient float64
 
 	chainClient       chain.Interface
 	chainClientLock   sync.Mutex
@@ -1249,8 +1241,6 @@ type (
 		resp                  chan createTxResponse
 		selectUtxos           []wire.OutPoint
 		allowUtxo             func(wtxmgr.Credit) bool
-		redeemId              uint32
-		data                  []byte
 	}
 	createTxResponse struct {
 		tx  *txauthor.AuthoredTx
@@ -1288,12 +1278,11 @@ out:
 				release = heldUnlock.release
 			}
 
-			tx, err := w.txToOutputsWithReemId(
+			tx, err := w.txToOutputs(
 				txr.outputs, txr.coinSelectKeyScope,
 				txr.changeKeyScope, txr.account, txr.minconf,
 				txr.feeSatPerKB, txr.coinSelectionStrategy,
 				txr.dryRun, txr.selectUtxos, txr.allowUtxo,
-				txr.redeemId, txr.data,
 			)
 
 			release()
@@ -1371,17 +1360,7 @@ func WithUtxoFilter(allowUtxo func(utxo wtxmgr.Credit) bool) TxCreateOption {
 func (w *Wallet) CreateSimpleTx(coinSelectKeyScope *waddrmgr.KeyScope,
 	account uint32, outputs []*wire.TxOut, minconf int32,
 	satPerKb btcutil.Amount, coinSelectionStrategy CoinSelectionStrategy,
-	dryRun bool, data []byte, optFuncs ...TxCreateOption) (*txauthor.AuthoredTx, error) {
-
-	return w.CreateSimpleTxWithRedeemId(
-		coinSelectKeyScope, account, outputs, minconf, satPerKb,
-		coinSelectionStrategy, dryRun, 0, data, optFuncs...)
-}
-
-func (w *Wallet) CreateSimpleTxWithRedeemId(coinSelectKeyScope *waddrmgr.KeyScope,
-	account uint32, outputs []*wire.TxOut, minconf int32,
-	satPerKb btcutil.Amount, coinSelectionStrategy CoinSelectionStrategy,
-	dryRun bool, redeemId uint32, data []byte, optFuncs ...TxCreateOption) (*txauthor.AuthoredTx, error) {
+	dryRun bool, optFuncs ...TxCreateOption) (*txauthor.AuthoredTx, error) {
 
 	opts := defaultTxCreateOptions()
 	for _, optFunc := range optFuncs {
@@ -1406,8 +1385,6 @@ func (w *Wallet) CreateSimpleTxWithRedeemId(coinSelectKeyScope *waddrmgr.KeyScop
 		resp:                  make(chan createTxResponse),
 		selectUtxos:           opts.selectUtxos,
 		allowUtxo:             opts.allowUtxo,
-		redeemId:              redeemId,
-		data:                  data,
 	}
 	w.createTxRequests <- req
 	resp := <-req.resp
@@ -3531,39 +3508,7 @@ func (w *Wallet) SendOutputs(outputs []*wire.TxOut, keyScope *waddrmgr.KeyScope,
 
 	return w.sendOutputs(
 		outputs, keyScope, account, minconf, satPerKb,
-		coinSelectionStrategy, label, 0, []byte{},
-	)
-}
-
-func (w *Wallet) SendOutputsWithDataAndRedeemIdCheck(outputs []*wire.TxOut, keyScope *waddrmgr.KeyScope,
-	account uint32, minconf int32, satPerKb btcutil.Amount,
-	coinSelectionStrategy CoinSelectionStrategy, label string, redeemId uint32, start, end *BlockIdentifier, data []byte) (*wire.MsgTx,
-	error) {
-
-	isSpent, hash, err := w.IsRedeemIdAlreadySpent(redeemId, start, end)
-
-	if err != nil {
-		return nil, err
-	}
-
-	if isSpent {
-		return nil, fmt.Errorf("redeem id %d already spent in tx %s", redeemId, hash)
-	}
-
-	return w.sendOutputs(
-		outputs, keyScope, account, minconf, satPerKb,
-		coinSelectionStrategy, label, redeemId, data,
-	)
-}
-
-func (w *Wallet) SendOutputsWithData(outputs []*wire.TxOut, keyScope *waddrmgr.KeyScope,
-	account uint32, minconf int32, satPerKb btcutil.Amount,
-	coinSelectionStrategy CoinSelectionStrategy, label string, data []byte) (*wire.MsgTx,
-	error) {
-
-	return w.sendOutputs(
-		outputs, keyScope, account, minconf, satPerKb,
-		coinSelectionStrategy, label, 0, data,
+		coinSelectionStrategy, label,
 	)
 }
 
@@ -3576,14 +3521,14 @@ func (w *Wallet) SendOutputsWithInput(outputs []*wire.TxOut,
 	selectedUtxos []wire.OutPoint) (*wire.MsgTx, error) {
 
 	return w.sendOutputs(outputs, keyScope, account, minconf, satPerKb,
-		coinSelectionStrategy, label, 0, nil, selectedUtxos...)
+		coinSelectionStrategy, label, selectedUtxos...)
 }
 
 // sendOutputs creates and sends payment transactions. It returns the
 // transaction upon success.
 func (w *Wallet) sendOutputs(outputs []*wire.TxOut, keyScope *waddrmgr.KeyScope,
 	account uint32, minconf int32, satPerKb btcutil.Amount,
-	coinSelectionStrategy CoinSelectionStrategy, label string, redeemId uint32, data []byte,
+	coinSelectionStrategy CoinSelectionStrategy, label string,
 	selectedUtxos ...wire.OutPoint) (*wire.MsgTx, error) {
 
 	// Ensure the outputs to be created adhere to the network's consensus
@@ -3601,9 +3546,9 @@ func (w *Wallet) sendOutputs(outputs []*wire.TxOut, keyScope *waddrmgr.KeyScope,
 	// transaction will be added to the database in order to ensure that we
 	// continue to re-broadcast the transaction upon restarts until it has
 	// been confirmed.
-	createdTx, err := w.CreateSimpleTxWithRedeemId(
+	createdTx, err := w.CreateSimpleTx(
 		keyScope, account, outputs, minconf, satPerKb,
-		coinSelectionStrategy, false, redeemId, data, WithCustomSelectUtxos(
+		coinSelectionStrategy, false, WithCustomSelectUtxos(
 			selectedUtxos,
 		),
 	)
@@ -4228,114 +4173,4 @@ func OpenWithRetry(db walletdb.DB, pubPass []byte, cbs *waddrmgr.OpenCallbacks,
 	}
 
 	return w, nil
-}
-
-func (w *Wallet) GenerateAndImportKeyWithCheck(btcAddr, ethAddr string) (*btcec.PublicKey, error) {
-
-	key, importedAddress, err := w.GenerateKeyFromEthAddressAndImport(ethAddr)
-	if err != nil {
-		return nil, err
-	}
-
-	if importedAddress != nil {
-		address := importedAddress.Address().String()
-		if btcAddr != "" && address != btcAddr {
-			return nil, fmt.Errorf("address mismatch: %s (in wallet) != %s (in contract)", address, btcAddr)
-		}
-	}
-
-	return key, nil
-}
-
-func (w *Wallet) GenerateKeyFromEthAddressAndImport(ethAddr string) (*btcec.PublicKey, waddrmgr.ManagedAddress, error) {
-
-	lc, err := w.lcFromEthAddr(ethAddr)
-	if err != nil {
-		return nil, nil, err
-	}
-
-	pubKey := lc.GetCombinedPubKey()
-	importedAddress, err := w.ImportPublicKeyReturnAddress(pubKey, waddrmgr.TaprootPubKey)
-	if err != nil {
-		return pubKey, importedAddress, err
-	}
-
-	if importedAddress == nil {
-		return pubKey, nil, fmt.Errorf("imported address is nil")
-	}
-
-	err = w.AddressMapStorage.SetEthAddress(importedAddress.Address().String(), ethAddr)
-	if err != nil {
-		return pubKey, nil, err
-	}
-
-	fmt.Printf("Imported address %s with eth address %s\n", importedAddress.Address(), ethAddr)
-
-	return pubKey, importedAddress, nil
-}
-
-func (w *Wallet) lcFromEthAddr(ethAddrStr string) (*crypto.LinearCombination, error) {
-	ethAddr := common.HexToAddress(ethAddrStr)
-
-	uint256Ty, _ := abi.NewType("uint256", "uint256", nil)
-	addressTy, _ := abi.NewType("address", "address", nil)
-
-	arguments := abi.Arguments{
-		{
-			Type: uint256Ty,
-		},
-		{
-			Type: uint256Ty,
-		},
-		{
-			Type: addressTy,
-		},
-	}
-
-	if w.Pk1 == nil {
-		return nil, fmt.Errorf("missing pk1")
-	}
-	if w.Pk2 == nil {
-		return nil, fmt.Errorf("missing pk2")
-	}
-
-	b1, _ := arguments.Pack(
-		w.Pk1.X(),
-		w.Pk1.Y(),
-		ethAddr,
-	)
-	h1 := crypto.Sha256(b1)
-	c1FromAddr, _ := crypto.PrivKeyFromBytes(h1[:])
-
-	b2, _ := arguments.Pack(
-		w.Pk2.X(),
-		w.Pk2.Y(),
-		ethAddr,
-	)
-	h2 := crypto.Sha256(b2)
-	c2FromAddr, _ := crypto.PrivKeyFromBytes(h2[:])
-
-	lc, err := crypto.NewLinearCombination(
-		[]*btcec.PublicKey{w.Pk1, w.Pk2},
-		[]*btcec.PrivateKey{c1FromAddr, c2FromAddr},
-		crypto.PrivKeyFromInt(0),
-	)
-	if err != nil {
-		return nil, err
-	}
-
-	return lc, nil
-}
-
-func (w *Wallet) GetSignerPublicKeys() (*btcec.PublicKey, *btcec.PublicKey, error) {
-
-	if w.Pk1 == nil {
-		return nil, nil, fmt.Errorf("missing pk1")
-	}
-
-	if w.Pk2 == nil {
-		return nil, nil, fmt.Errorf("missing pk2")
-	}
-
-	return w.Pk1, w.Pk2, nil
 }

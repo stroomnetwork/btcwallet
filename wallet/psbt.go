@@ -92,7 +92,7 @@ func (w *Wallet) FundPsbt(packet *psbt.Packet, keyScope *waddrmgr.KeyScope,
 		// change address creation.
 		tx, err = w.CreateSimpleTx(
 			keyScope, account, packet.UnsignedTx.TxOut, minConfs,
-			feeSatPerKB, coinSelectionStrategy, false, nil,
+			feeSatPerKB, coinSelectionStrategy, false,
 			optFuncs...,
 		)
 		if err != nil {
@@ -181,7 +181,7 @@ func (w *Wallet) FundPsbt(packet *psbt.Packet, keyScope *waddrmgr.KeyScope,
 		// We also need a change source which needs to be able to insert
 		// a new change address into the database.
 		err = walletdb.Update(w.db, func(dbtx walletdb.ReadWriteTx) error {
-			_, changeSource, err := w.addrMgrWithChangeSource(dbtx, opts.changeKeyScope, account, nil)
+			_, changeSource, err := w.addrMgrWithChangeSource(dbtx, opts.changeKeyScope, account)
 			if err != nil {
 				return err
 			}

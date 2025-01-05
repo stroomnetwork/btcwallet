@@ -14,8 +14,6 @@ import (
 	"github.com/btcsuite/btcd/wire"
 	"github.com/btcsuite/btcwallet/wallet/txrules"
 	"github.com/btcsuite/btcwallet/wallet/txsizes"
-	"github.com/stroomnetwork/frost"
-	"github.com/stroomnetwork/frost/crypto"
 )
 
 // SumOutputValues sums up the list of TxOuts and returns an Amount.
@@ -248,8 +246,9 @@ type SecretsSource interface {
 // are passed in prevPkScripts and the slice length must match the number of
 // inputs.  Private keys and redeem scripts are looked up using a SecretsSource
 // based on the previous output script.
-func AddAllInputScripts(signer frost.Signer, linearCombinations map[string]*crypto.LinearCombination, data []byte,
-	tx *wire.MsgTx, prevPkScripts [][]byte, inputValues []btcutil.Amount, secrets SecretsSource) error {
+func AddAllInputScripts(
+	tx *wire.MsgTx, prevPkScripts [][]byte, inputValues []btcutil.Amount, secrets SecretsSource,
+) error {
 
 	inputFetcher, err := TXPrevOutFetcher(tx, prevPkScripts, inputValues)
 	if err != nil {
@@ -292,6 +291,7 @@ func AddAllInputScripts(signer frost.Signer, linearCombinations map[string]*cryp
 			}
 
 		case txscript.IsPayToTaproot(pkScript):
+			//spendTaprootKey removed as stroom handles it
 
 		default:
 			sigScript := inputs[i].SignatureScript
@@ -357,17 +357,6 @@ func spendWitnessKeyHash(txIn *wire.TxIn, pkScript []byte,
 
 	txIn.Witness = witnessScript
 
-	return nil
-}
-
-// spendTaprootKey generates, and sets a valid witness for spending the passed
-// pkScript with the specified input amount. The input amount *must*
-// correspond to the output value of the previous pkScript, or else verification
-// will fail since the new sighash digest algorithm defined in BIP0341 includes
-// the input value in the sighash.
-func spendTaprootKey(linearCombinations map[string]*crypto.LinearCombination, pkScript []byte, inputValue int64,
-	params *chaincfg.Params, tx *wire.MsgTx, sigHashes *txscript.TxSigHashes, idx int,
-) error {
 	return nil
 }
 
@@ -437,10 +426,9 @@ func spendNestedWitnessPubKeyHash(txIn *wire.TxIn, pkScript []byte,
 // AddAllInputScripts modifies an authored transaction by adding inputs scripts
 // for each input of an authored transaction.  Private keys and redeem scripts
 // are looked up using a SecretsSource based on the previous output script.
-func (tx *AuthoredTx) AddAllInputScripts(signer frost.Signer, linearCombinations map[string]*crypto.LinearCombination,
-	data []byte, secrets SecretsSource) error {
+func (tx *AuthoredTx) AddAllInputScripts(secrets SecretsSource) error {
 	return AddAllInputScripts(
-		signer, linearCombinations, data, tx.Tx, tx.PrevScripts, tx.PrevInputValues, secrets,
+		tx.Tx, tx.PrevScripts, tx.PrevInputValues, secrets,
 	)
 }
 

@@ -7,8 +7,6 @@ package run
 import (
 	"context"
 	"fmt"
-	"github.com/btcsuite/btcd/btcec/v2"
-	"github.com/stroomnetwork/frost"
 	"net"
 	"net/http"
 	_ "net/http/pprof" // nolint:gosec
@@ -25,15 +23,11 @@ import (
 	"github.com/stroomnetwork/btcwallet/wallet"
 )
 
-const ethChangeAddr = "0x7b3f4f4b3cCf7f3fDf3f3f3f3f3f3f3f3f3f3f3f"
-
 var (
 	cfg *Config
 )
 
 type BtcwalletConfig struct {
-	Signer         frost.Signer
-	Pk1, Pk2       *btcec.PublicKey
 	BitcoindConfig *chain.BitcoindConfig
 	Config         *Config
 	InitTimeout    time.Duration
@@ -152,35 +146,12 @@ func doInit(config *BtcwalletConfig) (*wallet.Wallet, error) {
 			return nil, err
 		}
 
-		w.FrostSigner = config.Signer
-		w.Pk1 = config.Pk1
-		w.Pk2 = config.Pk2
-
-		storage, err := wallet.NewAddressMapStorage(cfg.AppDataDir.Value + "/" + wallet.DefaultStorageFileName)
-		if err != nil {
-			log.Error(err)
-			return nil, err
-		}
-		w.AddressMapStorage = storage
-
 		err = waitForChainClientInitialized(w, config.InitTimeout)
 		if err != nil {
 			log.Error(err)
 			return nil, err
 		}
 
-		changeAddressKey, changeAddress, err := w.GenerateKeyFromEthAddressAndImport(ethChangeAddr)
-		if err != nil && !strings.Contains(err.Error(), "already exists") {
-			return nil, fmt.Errorf("cannot import change address: %w", err)
-		}
-		if changeAddressKey == nil {
-			return nil, fmt.Errorf("change key is nil")
-		}
-		if changeAddress != nil {
-			log.Infof("Change address: %s", changeAddress.Address())
-		}
-
-		w.ChangeAddressKey = changeAddressKey
 		w.FeeCoefficient = config.FeeCoefficient
 
 		if config.RescanStartBlock != 0 {
@@ -228,15 +199,6 @@ func checkConfigForNil(config *BtcwalletConfig) error {
 	var errors []string
 	if config.Config == nil {
 		errors = append(errors, "config is nil")
-	}
-	if config.Signer == nil {
-		errors = append(errors, "signer is nil")
-	}
-	if config.Pk1 == nil {
-		errors = append(errors, "pk1 is nil")
-	}
-	if config.Pk2 == nil {
-		errors = append(errors, "pk2 is nil")
 	}
 	if config.InitTimeout == 0 {
 		config.InitTimeout = 30 * time.Second

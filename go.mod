@@ -14,7 +14,6 @@ require (
 	github.com/btcsuite/websocket v0.0.0-20150119174127-31079b680792
 	github.com/davecgh/go-spew v1.1.1
 	github.com/decred/dcrd/dcrec/secp256k1/v4 v4.3.0
-	github.com/ethereum/go-ethereum v1.14.11
 	github.com/golang/protobuf v1.5.4
 	github.com/jessevdk/go-flags v1.4.0
 	github.com/jrick/logrotate v1.0.0
@@ -25,7 +24,6 @@ require (
 	github.com/lightningnetwork/lnd/tlv v1.0.2
 	github.com/steveyen/gkvlite v0.0.0-20141117050110-5b47ed6d7458
 	github.com/stretchr/testify v1.9.0
-	github.com/stroomnetwork/frost v0.0.15-0.20241127095551-7ed8f19ff547
 	golang.org/x/crypto v0.25.0
 	golang.org/x/net v0.24.0
 	golang.org/x/sync v0.7.0
