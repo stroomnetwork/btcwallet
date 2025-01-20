@@ -9,9 +9,9 @@ import (
 	"github.com/btcsuite/btcd/chaincfg/chainhash"
 	"github.com/btcsuite/btcd/txscript"
 	"github.com/btcsuite/btcd/wire"
-	"github.com/btcsuite/btcwallet/walletdb"
-	"github.com/btcsuite/btcwallet/wtxmgr"
 	"github.com/stroomnetwork/btcwallet/waddrmgr"
+	"github.com/stroomnetwork/btcwallet/walletdb"
+	"github.com/stroomnetwork/btcwallet/wtxmgr"
 )
 
 // RecoveryManager maintains the state required to recover previously used

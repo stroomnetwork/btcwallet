@@ -1,12 +1,12 @@
-module github.com/btcsuite/btcwallet/wtxmgr
+module github.com/stroomnetwork/btcwallet/wtxmgr
 
 require (
 	github.com/btcsuite/btcd v0.23.4
 	github.com/btcsuite/btcd/btcutil v1.1.0
 	github.com/btcsuite/btcd/chaincfg/chainhash v1.0.1
 	github.com/btcsuite/btclog v0.0.0-20170628155309-84c8d2346e9f
-	github.com/btcsuite/btcwallet/walletdb v1.4.4
 	github.com/lightningnetwork/lnd/clock v1.0.1
+	github.com/stroomnetwork/btcwallet/walletdb v0.0.0-20250120144336-76c0c3b07125
 )
 
 require (

@@ -23,11 +23,11 @@ import (
 	"github.com/btcsuite/btcd/rpcclient"
 	"github.com/btcsuite/btcd/txscript"
 	"github.com/btcsuite/btcd/wire"
-	"github.com/btcsuite/btcwallet/wallet/txrules"
-	"github.com/btcsuite/btcwallet/wtxmgr"
 	"github.com/stroomnetwork/btcwallet/chain"
 	"github.com/stroomnetwork/btcwallet/waddrmgr"
 	"github.com/stroomnetwork/btcwallet/wallet"
+	"github.com/stroomnetwork/btcwallet/wallet/txrules"
+	"github.com/stroomnetwork/btcwallet/wtxmgr"
 )
 
 const (

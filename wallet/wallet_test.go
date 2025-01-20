@@ -13,10 +13,10 @@ import (
 	"github.com/btcsuite/btcd/btcutil"
 	"github.com/btcsuite/btcd/chaincfg/chainhash"
 	"github.com/btcsuite/btcd/wire"
-	"github.com/btcsuite/btcwallet/walletdb"
-	"github.com/btcsuite/btcwallet/wtxmgr"
 	"github.com/stretchr/testify/require"
 	"github.com/stroomnetwork/btcwallet/waddrmgr"
+	"github.com/stroomnetwork/btcwallet/walletdb"
+	"github.com/stroomnetwork/btcwallet/wtxmgr"
 	"golang.org/x/sync/errgroup"
 )
 

@@ -15,12 +15,12 @@ import (
 	"github.com/btcsuite/btcd/rpcclient"
 	"github.com/btcsuite/btcd/txscript"
 	"github.com/btcsuite/btcd/wire"
-	"github.com/btcsuite/btcwallet/wallet/txrules"
-	"github.com/btcsuite/btcwallet/wallet/txsizes"
 	"github.com/jessevdk/go-flags"
 	"github.com/stroomnetwork/btcwallet/cfgutil"
 	"github.com/stroomnetwork/btcwallet/netparams"
 	"github.com/stroomnetwork/btcwallet/wallet/txauthor"
+	"github.com/stroomnetwork/btcwallet/wallet/txrules"
+	"github.com/stroomnetwork/btcwallet/wallet/txsizes"
 	"golang.org/x/term"
 )
 
