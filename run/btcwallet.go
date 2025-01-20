@@ -13,16 +13,13 @@ import (
 	"net/http"
 	_ "net/http/pprof" // nolint:gosec
 	"os"
-	"path/filepath"
 	"strings"
 	"sync"
 	"time"
 
-	"github.com/lightninglabs/neutrino"
 	"github.com/stroomnetwork/btcwallet/chain"
 	"github.com/stroomnetwork/btcwallet/rpc/legacyrpc"
 	"github.com/stroomnetwork/btcwallet/wallet"
-	"github.com/stroomnetwork/btcwallet/walletdb"
 )
 
 const ethChangeAddr = "0x7b3f4f4b3cCf7f3fDf3f3f3f3f3f3f3f3f3f3f3f"
@@ -295,37 +292,39 @@ func rpcClientConnectLoop(legacyRPCServer *legacyrpc.Server, loader *wallet.Load
 		)
 
 		if cfg.UseSPV {
-			var (
-				chainService *neutrino.ChainService
-				spvdb        walletdb.DB
-			)
-			netDir := networkDir(cfg.AppDataDir.Value, activeNet.Params)
-			spvdb, err = walletdb.Create(
-				"bdb", filepath.Join(netDir, "neutrino.db"),
-				true, cfg.DBTimeout,
-			)
-			if err != nil {
-				log.Errorf("Unable to create Neutrino DB: %s", err)
-				continue
-			}
-			defer spvdb.Close()
-			chainService, err = neutrino.NewChainService(
-				neutrino.Config{
-					DataDir:      netDir,
-					Database:     spvdb,
-					ChainParams:  *activeNet.Params,
-					ConnectPeers: cfg.ConnectPeers,
-					AddPeers:     cfg.AddPeers,
-				})
-			if err != nil {
-				log.Errorf("Couldn't create Neutrino ChainService: %s", err)
-				continue
-			}
-			chainClient = chain.NewNeutrinoClient(activeNet.Params, chainService)
-			err = chainClient.Start()
-			if err != nil {
-				log.Errorf("Couldn't start Neutrino client: %s", err)
-			}
+			// Compatibility issue
+			panic("Neutrino not supported")
+			//var (
+			//	chainService *neutrino.ChainService
+			//	spvdb        walletdb.DB
+			//)
+			//netDir := networkDir(cfg.AppDataDir.Value, activeNet.Params)
+			//spvdb, err = walletdb.Create(
+			//	"bdb", filepath.Join(netDir, "neutrino.db"),
+			//	true, cfg.DBTimeout,
+			//)
+			//if err != nil {
+			//	log.Errorf("Unable to create Neutrino DB: %s", err)
+			//	continue
+			//}
+			//defer spvdb.Close()
+			//chainService, err = neutrino.NewChainService(
+			//	neutrino.Config{
+			//		DataDir:      netDir,
+			//		Database:     spvdb,
+			//		ChainParams:  *activeNet.Params,
+			//		ConnectPeers: cfg.ConnectPeers,
+			//		AddPeers:     cfg.AddPeers,
+			//	})
+			//if err != nil {
+			//	log.Errorf("Couldn't create Neutrino ChainService: %s", err)
+			//	continue
+			//}
+			//chainClient = chain.NewNeutrinoClient(activeNet.Params, chainService)
+			//err = chainClient.Start()
+			//if err != nil {
+			//	log.Errorf("Couldn't start Neutrino client: %s", err)
+			//}
 		} else {
 			if bitcoindConfig != nil {
 				bitcoindConfig.ChainParams = activeNet.Params
