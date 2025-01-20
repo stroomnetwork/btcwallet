@@ -10,7 +10,6 @@ import (
 	"encoding/binary"
 	"errors"
 	"fmt"
-	"strings"
 	"time"
 
 	"github.com/btcsuite/btcd/blockchain"
@@ -556,11 +555,8 @@ func (s *Store) Rollback(ns walletdb.ReadWriteBucket, height int32) error {
 }
 
 func (s *Store) rollback(ns walletdb.ReadWriteBucket, height int32) error {
-	minedBalance, err := fetchMinedBalance(ns)
-	// NB: workaround to rollback broken state
-	if err != nil && !strings.Contains(err.Error(), "read 0") {
-		return err
-	}
+	var err error
+	minedBalance, _ := fetchMinedBalance(ns)
 
 	// Keep track of all credits that were removed from coinbase
 	// transactions.  After detaching all blocks, if any transaction record
