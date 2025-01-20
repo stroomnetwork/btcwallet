@@ -10,7 +10,7 @@ import (
 
 	"github.com/btcsuite/btcd/btcutil"
 	"github.com/btcsuite/btcd/chaincfg/chainhash"
-	"github.com/btcsuite/btcwallet/walletdb"
+	"github.com/stroomnetwork/btcwallet/walletdb"
 )
 
 // CreditRecord contains metadata regarding a transaction credit for a known

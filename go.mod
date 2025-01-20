@@ -7,10 +7,6 @@ require (
 	github.com/btcsuite/btcd/btcutil/psbt v1.1.8
 	github.com/btcsuite/btcd/chaincfg/chainhash v1.1.0
 	github.com/btcsuite/btclog v0.0.0-20170628155309-84c8d2346e9f
-	github.com/btcsuite/btcwallet/wallet/txrules v1.2.2
-	github.com/btcsuite/btcwallet/wallet/txsizes v1.2.5
-	github.com/btcsuite/btcwallet/walletdb v1.4.4
-	github.com/btcsuite/btcwallet/wtxmgr v1.5.4
 	github.com/btcsuite/websocket v0.0.0-20150119174127-31079b680792
 	github.com/davecgh/go-spew v1.1.1
 	github.com/decred/dcrd/dcrec/secp256k1/v4 v4.3.0
@@ -25,6 +21,10 @@ require (
 	github.com/lightningnetwork/lnd/tlv v1.0.2
 	github.com/steveyen/gkvlite v0.0.0-20141117050110-5b47ed6d7458
 	github.com/stretchr/testify v1.9.0
+	github.com/stroomnetwork/btcwallet/wallet/txrules v0.0.0-20250120142946-d90802e16c76
+	github.com/stroomnetwork/btcwallet/wallet/txsizes v0.0.0-20250120142946-d90802e16c76
+	github.com/stroomnetwork/btcwallet/walletdb v0.0.0-20250120142946-d90802e16c76
+	github.com/stroomnetwork/btcwallet/wtxmgr v0.0.0-20250120142946-d90802e16c76
 	github.com/stroomnetwork/frost v0.0.15-0.20241127095551-7ed8f19ff547
 	golang.org/x/crypto v0.25.0
 	golang.org/x/net v0.24.0
@@ -35,6 +35,8 @@ require (
 
 require (
 	github.com/aead/siphash v1.0.1 // indirect
+	github.com/btcsuite/btcwallet/walletdb v1.4.4 // indirect
+	github.com/btcsuite/btcwallet/wtxmgr v1.5.0 // indirect
 	github.com/btcsuite/go-socks v0.0.0-20170105172521-4720035b7bfd // indirect
 	github.com/decred/dcrd/crypto/blake256 v1.0.1 // indirect
 	github.com/decred/dcrd/lru v1.1.2 // indirect

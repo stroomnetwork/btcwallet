@@ -18,11 +18,11 @@ import (
 	"sync"
 	"time"
 
-	"github.com/btcsuite/btcwallet/walletdb"
 	"github.com/lightninglabs/neutrino"
 	"github.com/stroomnetwork/btcwallet/chain"
 	"github.com/stroomnetwork/btcwallet/rpc/legacyrpc"
 	"github.com/stroomnetwork/btcwallet/wallet"
+	"github.com/stroomnetwork/btcwallet/walletdb"
 )
 
 const ethChangeAddr = "0x7b3f4f4b3cCf7f3fDf3f3f3f3f3f3f3f3f3f3f3f"

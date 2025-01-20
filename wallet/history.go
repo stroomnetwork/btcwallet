@@ -8,9 +8,9 @@ import (
 	"fmt"
 
 	"github.com/btcsuite/btcd/chaincfg/chainhash"
-	"github.com/btcsuite/btcwallet/walletdb"
-	"github.com/btcsuite/btcwallet/wtxmgr"
 	"github.com/stroomnetwork/btcwallet/waddrmgr"
+	"github.com/stroomnetwork/btcwallet/walletdb"
+	"github.com/stroomnetwork/btcwallet/wtxmgr"
 )
 
 var (

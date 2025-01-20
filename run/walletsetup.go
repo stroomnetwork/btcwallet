@@ -14,12 +14,12 @@ import (
 	"github.com/btcsuite/btcd/btcutil"
 	"github.com/btcsuite/btcd/chaincfg"
 	"github.com/btcsuite/btcd/wire"
-	"github.com/btcsuite/btcwallet/walletdb"
-	_ "github.com/btcsuite/btcwallet/walletdb/bdb"
 	"github.com/stroomnetwork/btcwallet/internal/legacy/keystore"
 	"github.com/stroomnetwork/btcwallet/internal/prompt"
 	"github.com/stroomnetwork/btcwallet/waddrmgr"
 	"github.com/stroomnetwork/btcwallet/wallet"
+	"github.com/stroomnetwork/btcwallet/walletdb"
+	_ "github.com/stroomnetwork/btcwallet/walletdb/bdb"
 )
 
 // networkDir returns the directory name of a network directory to hold wallet

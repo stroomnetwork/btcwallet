@@ -18,8 +18,8 @@ import (
 	"github.com/btcsuite/btcd/chaincfg"
 	"github.com/btcsuite/btcd/chaincfg/chainhash"
 	"github.com/btcsuite/btcd/wire"
-	"github.com/btcsuite/btcwallet/walletdb"
 	"github.com/lightningnetwork/lnd/clock"
+	"github.com/stroomnetwork/btcwallet/walletdb"
 )
 
 const (
