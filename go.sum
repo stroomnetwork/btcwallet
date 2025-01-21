@@ -139,8 +139,8 @@ github.com/stroomnetwork/btcwallet/wallet/txsizes v0.0.0-20250120144336-76c0c3b0
 github.com/stroomnetwork/btcwallet/wallet/txsizes v0.0.0-20250120144336-76c0c3b07125/go.mod h1:nSHPicfoEr+mfhMmsW8JCY27ficP/i6U3EVRyNnGUiM=
 github.com/stroomnetwork/btcwallet/walletdb v0.0.0-20250120144336-76c0c3b07125 h1:DDUpi5Jq6qEFhymaWR17+HWUaOHNBxrjg3DlRVLrR70=
 github.com/stroomnetwork/btcwallet/walletdb v0.0.0-20250120144336-76c0c3b07125/go.mod h1:yDYkY7OiaXFAbjUKDZqsdNI0Lh2/koA47RvVfHATLQw=
-github.com/stroomnetwork/btcwallet/wtxmgr v0.0.0-20250120154725-83ecd7334c95 h1:BJlNumWCUFCuZUTjhC5Ks/NXLmIAPaFk5XCexhd8S3I=
-github.com/stroomnetwork/btcwallet/wtxmgr v0.0.0-20250120154725-83ecd7334c95/go.mod h1:tG8F+IkOyUCkexgm3KhYmafLkKZEJPAptyt0+V3dT3E=
+github.com/stroomnetwork/btcwallet/wtxmgr v0.0.0-20250121121926-6d5dc5488541 h1:1vUnNrTRgrF7R4XmdZ+BZmyUPRG8nuxbRc9MJeqZBO0=
+github.com/stroomnetwork/btcwallet/wtxmgr v0.0.0-20250121121926-6d5dc5488541/go.mod h1:tG8F+IkOyUCkexgm3KhYmafLkKZEJPAptyt0+V3dT3E=
 github.com/stroomnetwork/frost v0.0.15-0.20241127095551-7ed8f19ff547 h1:+30l+gXSZDy1dX3AG1k/twBM3NuqkC06DpnBh7t+UcY=
 github.com/stroomnetwork/frost v0.0.15-0.20241127095551-7ed8f19ff547/go.mod h1:t+fO+nCzeHhC2Y0xXL5vjh1PJYueKZZ9TQgwJJmFPSY=
 github.com/syndtr/goleveldb v1.0.1-0.20210819022825-2ae1ddf74ef7 h1:epCh84lMvA70Z7CTTCmYQn2CKbY8j86K7/FAIr141uY=
