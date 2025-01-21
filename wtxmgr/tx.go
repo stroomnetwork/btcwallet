@@ -555,8 +555,10 @@ func (s *Store) Rollback(ns walletdb.ReadWriteBucket, height int32) error {
 }
 
 func (s *Store) rollback(ns walletdb.ReadWriteBucket, height int32) error {
-	var err error
-	minedBalance, _ := fetchMinedBalance(ns)
+	minedBalance, err := fetchMinedBalance(ns)
+	if err != nil {
+		return err
+	}
 
 	// Keep track of all credits that were removed from coinbase
 	// transactions.  After detaching all blocks, if any transaction record
@@ -586,14 +588,20 @@ func (s *Store) rollback(ns walletdb.ReadWriteBucket, height int32) error {
 			recKey := keyTxRecord(txHash, &b.Block)
 			recVal := existsRawTxRecord(ns, recKey)
 			var rec TxRecord
-			err = readRawTxRecord(txHash, recVal, &rec)
-			if err != nil {
-				return err
+			if len(recVal) > 0 {
+				err = readRawTxRecord(txHash, recVal, &rec)
+				if err != nil {
+					return err
+				}
 			}
 
 			err = deleteTxRecord(ns, txHash, &b.Block)
 			if err != nil {
 				return err
+			}
+
+			if len(recVal) == 0 {
+				continue
 			}
 
 			// Handle coinbase transactions specially since they are
