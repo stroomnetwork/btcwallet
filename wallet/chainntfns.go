@@ -156,6 +156,8 @@ func (w *Wallet) handleChainNotifications() {
 						"sync due to error: %v", err)
 
 					return
+				} else {
+					log.Infof("Sync with chain done")
 				}
 
 			case chain.BlockConnected:
