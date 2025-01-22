@@ -849,6 +849,7 @@ func (w *Wallet) recovery(chainClient chain.Interface,
 			blocks = blocks[:0]
 			recoveryMgr.ResetBlockBatch()
 		}
+		log.Debugf("RECOVERY iteration complete for height = %d", height)
 	}
 	log.Infof("RECOVERY -- rescanning for used addresses done")
 
