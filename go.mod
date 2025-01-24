@@ -24,7 +24,7 @@ require (
 	github.com/stroomnetwork/btcwallet/wallet/txrules v0.0.0-20250120144336-76c0c3b07125
 	github.com/stroomnetwork/btcwallet/wallet/txsizes v0.0.0-20250120144336-76c0c3b07125
 	github.com/stroomnetwork/btcwallet/walletdb v0.0.0-20250120144336-76c0c3b07125
-	github.com/stroomnetwork/btcwallet/wtxmgr v0.0.0-20250120154725-83ecd7334c95
+	github.com/stroomnetwork/btcwallet/wtxmgr v0.0.0-20250120144336-76c0c3b07125
 	github.com/stroomnetwork/frost v0.0.15-0.20241127095551-7ed8f19ff547
 	golang.org/x/crypto v0.25.0
 	golang.org/x/net v0.24.0
