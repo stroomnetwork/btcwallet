@@ -14,8 +14,8 @@ import (
 	"github.com/btcsuite/btcd/chaincfg"
 	"github.com/btcsuite/btcd/txscript"
 	"github.com/btcsuite/btcd/wire"
-	"github.com/stroomnetwork/btcwallet/wallet/txrules"
-	"github.com/stroomnetwork/btcwallet/wallet/txsizes"
+	"github.com/btcsuite/btcwallet/wallet/txrules"
+	"github.com/btcsuite/btcwallet/wallet/txsizes"
 	"github.com/stroomnetwork/frost"
 	"github.com/stroomnetwork/frost/crypto"
 )

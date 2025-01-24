@@ -8,7 +8,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/stroomnetwork/btcwallet/walletdb"
+	"github.com/btcsuite/btcwallet/walletdb"
 )
 
 const (
