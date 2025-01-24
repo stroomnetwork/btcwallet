@@ -9,7 +9,7 @@ import (
 	"os"
 	"time"
 
-	"github.com/stroomnetwork/btcwallet/walletdb"
+	"github.com/btcsuite/btcwallet/walletdb"
 	"go.etcd.io/bbolt"
 )
 

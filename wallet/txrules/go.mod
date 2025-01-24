@@ -1,4 +1,4 @@
-module github.com/stroomnetwork/btcwallet/wallet/txrules
+module github.com/btcsuite/btcwallet/wallet/txrules
 
 require (
 	github.com/btcsuite/btcd v0.23.4

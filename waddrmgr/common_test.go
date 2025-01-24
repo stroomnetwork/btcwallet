@@ -13,8 +13,8 @@ import (
 
 	"github.com/btcsuite/btcd/btcutil/hdkeychain"
 	"github.com/btcsuite/btcd/chaincfg"
-	"github.com/stroomnetwork/btcwallet/walletdb"
-	_ "github.com/stroomnetwork/btcwallet/walletdb/bdb"
+	"github.com/btcsuite/btcwallet/walletdb"
+	_ "github.com/btcsuite/btcwallet/walletdb/bdb"
 )
 
 var (

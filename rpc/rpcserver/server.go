@@ -32,6 +32,7 @@ import (
 	"github.com/btcsuite/btcd/rpcclient"
 	"github.com/btcsuite/btcd/txscript"
 	"github.com/btcsuite/btcd/wire"
+	"github.com/btcsuite/btcwallet/walletdb"
 	"github.com/stroomnetwork/btcwallet/cfgutil"
 	"github.com/stroomnetwork/btcwallet/chain"
 	"github.com/stroomnetwork/btcwallet/internal/zero"
@@ -39,7 +40,6 @@ import (
 	pb "github.com/stroomnetwork/btcwallet/rpc/walletrpc"
 	"github.com/stroomnetwork/btcwallet/waddrmgr"
 	"github.com/stroomnetwork/btcwallet/wallet"
-	"github.com/stroomnetwork/btcwallet/walletdb"
 )
 
 // Public API version constants

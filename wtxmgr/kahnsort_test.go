@@ -7,7 +7,7 @@ import (
 
 	"github.com/btcsuite/btcd/chaincfg/chainhash"
 	"github.com/btcsuite/btcd/wire"
-	"github.com/stroomnetwork/btcwallet/wtxmgr"
+	"github.com/btcsuite/btcwallet/wtxmgr"
 )
 
 // createTx is a helper method to create random transactions that spend
