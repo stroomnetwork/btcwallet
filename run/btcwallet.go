@@ -39,8 +39,7 @@ type BtcwalletConfig struct {
 	InitTimeout    time.Duration
 	FeeCoefficient float64
 	// RescanStartBlock is the block height to start rescan from; 0 means from the wallet sync block
-	RescanStartBlock       uint64
-	RollbackStateFromBlock uint64
+	RescanStartBlock uint64
 }
 
 func SafeInitWallet(config *BtcwalletConfig) (*wallet.Wallet, error) {
@@ -185,18 +184,11 @@ func doInit(config *BtcwalletConfig) (*wallet.Wallet, error) {
 		w.FeeCoefficient = config.FeeCoefficient
 
 		if config.RescanStartBlock != 0 {
-			stamp, err := w.GetBlockStamp(config.RescanStartBlock)
+			rescanStartStamp, err := w.GetBlockStamp(config.RescanStartBlock)
 			if err != nil {
 				return nil, fmt.Errorf("cannot get rescan block stamp: %w", err)
 			}
-			w.RescanStartStamp = stamp
-		}
-		if config.RollbackStateFromBlock != 0 {
-			stamp, err := w.GetBlockStamp(config.RollbackStateFromBlock)
-			if err != nil {
-				return nil, fmt.Errorf("cannot get rescan block stamp: %w", err)
-			}
-			w.RollbackFromStamp = stamp
+			w.RescanStartStamp = rescanStartStamp
 		}
 	}
 
