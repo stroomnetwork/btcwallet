@@ -1575,7 +1575,10 @@ func signMessage(icmd interface{}, w *wallet.Wallet) (interface{}, error) {
 	_ = wire.WriteVarString(&buf, 0, "Bitcoin Signed Message:\n")
 	_ = wire.WriteVarString(&buf, 0, cmd.Message)
 	messageHash := chainhash.DoubleHashB(buf.Bytes())
-	sigbytes := ecdsa.SignCompact(privKey, messageHash, true)
+	sigbytes, err := ecdsa.SignCompact(privKey, messageHash, true)
+	if err != nil {
+		return nil, err
+	}
 
 	return base64.StdEncoding.EncodeToString(sigbytes), nil
 }
