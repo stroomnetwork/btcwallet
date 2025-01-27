@@ -70,6 +70,7 @@ type Config struct {
 	// Wallet options
 	WalletPrivatePass string `long:"walletprivatepass" default-mask:"-" description:"The private wallet passphrase"`
 	WalletPass        string `long:"walletpass" default-mask:"-" description:"The public wallet passphrase -- Only required if the wallet was created with one"`
+	BirthdayTimestamp int64  `long:"birthdaytimestamp" description:"Wallet birthday timestamp in seconds, default time.now()"`
 
 	// RPC client options
 	RPCConnect       string                  `short:"c" long:"rpcconnect" description:"Hostname/IP and port of btcd RPC server to connect to (default localhost:8334, testnet: localhost:18334, simnet: localhost:18556)"`
@@ -114,8 +115,7 @@ type Config struct {
 	ExperimentalRPCListeners []string `long:"experimentalrpclisten" description:"Listen for RPC connections on this interface/port"`
 
 	// Deprecated options
-	DataDir           *cfgutil.ExplicitString `short:"b" long:"datadir" default-mask:"-" description:"DEPRECATED -- use appdata instead"`
-	BirthdayTimestamp int64                   `long:"birthdaytimestamp" description:"Wallet birthday timestamp in seconds, default time.now()"`
+	DataDir *cfgutil.ExplicitString `short:"b" long:"datadir" default-mask:"-" description:"DEPRECATED -- use appdata instead"`
 }
 
 // cleanAndExpandPath expands environement variables and leading ~ in the
