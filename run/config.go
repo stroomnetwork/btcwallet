@@ -114,7 +114,8 @@ type Config struct {
 	ExperimentalRPCListeners []string `long:"experimentalrpclisten" description:"Listen for RPC connections on this interface/port"`
 
 	// Deprecated options
-	DataDir *cfgutil.ExplicitString `short:"b" long:"datadir" default-mask:"-" description:"DEPRECATED -- use appdata instead"`
+	DataDir           *cfgutil.ExplicitString `short:"b" long:"datadir" default-mask:"-" description:"DEPRECATED -- use appdata instead"`
+	BirthdayTimestamp int64                   `long:"birthdaytimestamp" description:"Wallet birthday timestamp in seconds, default time.now()"`
 }
 
 // cleanAndExpandPath expands environement variables and leading ~ in the
