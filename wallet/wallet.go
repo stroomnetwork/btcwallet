@@ -4269,7 +4269,7 @@ func (w *Wallet) GenerateKeyFromEthAddressAndImport(ethAddr string) (*btcec.Publ
 		return pubKey, nil, err
 	}
 
-	fmt.Printf("Imported address %s with eth address %s\n", importedAddress.Address(), ethAddr)
+	log.Debugf("Imported address %s with eth address %s", importedAddress.Address(), ethAddr)
 
 	return pubKey, importedAddress, nil
 }
