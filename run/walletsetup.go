@@ -202,7 +202,14 @@ func createWallet(cfg *Config) error {
 	}
 
 	fmt.Println("Creating the wallet...")
-	w, err := loader.CreateNewWallet(pubPass, privPass, seed, time.Now())
+	var birthday time.Time
+	if cfg.BirthdayTimestamp > 0 {
+		birthday = time.Unix(cfg.BirthdayTimestamp, 0)
+	} else {
+		birthday = time.Now()
+	}
+
+	w, err := loader.CreateNewWallet(pubPass, privPass, seed, birthday)
 	if err != nil {
 		return err
 	}
