@@ -395,6 +395,35 @@ func (w *Wallet) ImportPublicKey(pubKey *btcec.PublicKey,
 	return err
 }
 
+func (w *Wallet) GenerateAddressFromKey(pubKey *btcec.PublicKey, addrType waddrmgr.AddressType) (waddrmgr.ManagedAddress, error) {
+	var keyScope waddrmgr.KeyScope
+	switch addrType {
+	case waddrmgr.NestedWitnessPubKey:
+		keyScope = waddrmgr.KeyScopeBIP0049Plus
+
+	case waddrmgr.WitnessPubKey:
+		keyScope = waddrmgr.KeyScopeBIP0084
+
+	case waddrmgr.TaprootPubKey:
+		keyScope = waddrmgr.KeyScopeBIP0086
+
+	default:
+		return nil, fmt.Errorf("address type %v is not supported", addrType)
+	}
+
+	scopedKeyManager, err := w.Manager.FetchScopedKeyManager(keyScope)
+	if err != nil {
+		return nil, err
+	}
+
+	addr, err := scopedKeyManager.GeneratePubKey(pubKey)
+	if err != nil {
+		return nil, err
+	}
+
+	return addr, nil
+}
+
 func (w *Wallet) ImportPublicKeyReturnAddress(pubKey *btcec.PublicKey, addrType waddrmgr.AddressType) (waddrmgr.ManagedAddress, error) {
 
 	// Determine what key scope the public key should belong to and import
