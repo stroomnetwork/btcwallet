@@ -10,14 +10,15 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
-	"github.com/btcsuite/btcd/btcec/v2"
-	"github.com/ethereum/go-ethereum/accounts/abi"
-	"github.com/ethereum/go-ethereum/common"
-	"github.com/stroomnetwork/frost/crypto"
 	"sort"
 	"sync"
 	"sync/atomic"
 	"time"
+
+	"github.com/btcsuite/btcd/btcec/v2"
+	"github.com/ethereum/go-ethereum/accounts/abi"
+	"github.com/ethereum/go-ethereum/common"
+	"github.com/stroomnetwork/frost/crypto"
 
 	"github.com/btcsuite/btcd/blockchain"
 	"github.com/btcsuite/btcd/btcjson"
@@ -4231,18 +4232,45 @@ func OpenWithRetry(db walletdb.DB, pubPass []byte, cbs *waddrmgr.OpenCallbacks,
 }
 
 func (w *Wallet) GenerateAndImportKeyWithCheck(btcAddr, ethAddr string) (*btcec.PublicKey, error) {
-
-	key, importedAddress, err := w.GenerateKeyFromEthAddressAndImport(ethAddr)
+	lc, err := w.lcFromEthAddr(ethAddr)
 	if err != nil {
 		return nil, err
 	}
 
-	if importedAddress != nil {
-		address := importedAddress.Address().String()
-		if btcAddr != "" && address != btcAddr {
-			return nil, fmt.Errorf("address mismatch: %s (in wallet) != %s (in contract)", address, btcAddr)
-		}
+	key := lc.GetCombinedPubKey()
+
+  generatedBtcAddress, err := w.GenerateAddressFromKey(key, waddrmgr.TaprootPubKey)
+  if err != nil {
+    return nil, err
+  }
+  if btcAddr != "" && generatedBtcAddress.Address().String() != btcAddr {
+    return nil, fmt.Errorf("address mismatch: %s (in contract) != %s (in wallet)", generatedBtcAddress.Address().String(), btcAddr)
+  }
+
+  importedAddresses, addrErr := w.AccountAddresses(waddrmgr.ImportedAddrAccount)
+  if addrErr != nil {
+    return nil, addrErr
+  }
+  for _, importedAddr := range importedAddresses {
+    if importedAddr.String() == generatedBtcAddress.Address().String() {
+      return nil, fmt.Errorf("already exists")
+    }
+  }
+
+  importedAddress, err := w.ImportPublicKeyReturnAddress(key, waddrmgr.TaprootPubKey)
+	if err != nil {
+		return key, err
 	}
+	if importedAddress == nil {
+		return key, fmt.Errorf("imported address is nil")
+	}
+
+	err = w.AddressMapStorage.SetEthAddress(importedAddress.Address().String(), ethAddr)
+	if err != nil {
+		return key, err
+	}
+
+	fmt.Printf("Imported address %s with eth address %s\n", importedAddress.Address(), ethAddr)
 
 	return key, nil
 }

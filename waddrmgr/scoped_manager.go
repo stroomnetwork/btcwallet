@@ -1979,6 +1979,17 @@ func (s *ScopedKeyManager) ImportPublicKey(ns walletdb.ReadWriteBucket,
 	return s.toImportedPublicManagedAddress(pubKey, true)
 }
 
+func (s *ScopedKeyManager) GeneratePubKey(pubKey *btcec.PublicKey) (ManagedAddress, error) {
+	managedAddr, err := newManagedAddressWithoutPrivKey(
+		s, ImportedDerivationPath, pubKey, true,
+		s.addrSchema.ExternalAddrType,
+	)
+	if err != nil {
+		return nil, err
+	}
+	return managedAddr, nil
+}
+
 // importPublicKey imports a public key into the address manager and updates the
 // wallet's start block if necessary. An error is returned if the public key
 // already exists.
@@ -2090,6 +2101,20 @@ func (s *ScopedKeyManager) toImportedPrivateManagedAddress(
 	// Add the new managed address to the cache of recent addresses and
 	// return it.
 	s.addrs[addrKey(managedAddr.Address().ScriptAddress())] = managedAddr
+	return managedAddr, nil
+}
+
+func (s *ScopedKeyManager) toNonImportedPublicManagedAddress(
+	pubKey *btcec.PublicKey, compressed bool) (*managedAddress, error) {
+
+	managedAddr, err := newManagedAddressWithoutPrivKey(
+		s, ImportedDerivationPath, pubKey, compressed,
+		s.addrSchema.ExternalAddrType,
+	)
+	if err != nil {
+		return nil, err
+	}
+
 	return managedAddr, nil
 }
 
