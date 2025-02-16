@@ -7,7 +7,6 @@ package txauthor
 
 import (
 	"errors"
-	"fmt"
 	"github.com/btcsuite/btcd/btcutil"
 	"github.com/btcsuite/btcd/chaincfg"
 	"github.com/btcsuite/btcd/txscript"
@@ -130,7 +129,6 @@ func NewUnsignedTransaction(outputs []*wire.TxOut, feeRatePerKb btcutil.Amount,
 			p2pkh, p2tr, p2wpkh, nested, outputs, changeSource.ScriptSize,
 		)
 		maxRequiredFee := txrules.FeeForSerializeSize(feeRatePerKb, maxSignedSize)
-
 		remainingAmount := inputAmount - targetAmount
 		if remainingAmount < maxRequiredFee {
 			targetFee = maxRequiredFee
@@ -148,7 +146,6 @@ func NewUnsignedTransaction(outputs []*wire.TxOut, feeRatePerKb btcutil.Amount,
 		changeAmount := inputAmount - targetAmount - maxRequiredFee
 		changeScript, err := changeSource.NewScript()
 		if err != nil {
-			fmt.Errorf("changeSource.NewScript error: %v\n", err)
 			return nil, err
 		}
 		change := wire.NewTxOut(int64(changeAmount), changeScript)
@@ -206,9 +203,8 @@ type SecretsSource interface {
 // are passed in prevPkScripts and the slice length must match the number of
 // inputs.  Private keys and redeem scripts are looked up using a SecretsSource
 // based on the previous output script.
-func AddAllInputScripts(
-	tx *wire.MsgTx, prevPkScripts [][]byte, inputValues []btcutil.Amount, secrets SecretsSource,
-) error {
+func AddAllInputScripts(tx *wire.MsgTx, prevPkScripts [][]byte,
+	inputValues []btcutil.Amount, secrets SecretsSource) error {
 
 	inputFetcher, err := TXPrevOutFetcher(tx, prevPkScripts, inputValues)
 	if err != nil {

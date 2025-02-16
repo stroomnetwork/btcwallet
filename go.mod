@@ -22,7 +22,6 @@ require (
 	github.com/lightninglabs/neutrino/cache v1.1.2
 	github.com/lightningnetwork/lnd/ticker v1.0.0
 	github.com/lightningnetwork/lnd/tlv v1.0.2
-	github.com/steveyen/gkvlite v0.0.0-20141117050110-5b47ed6d7458
 	github.com/stretchr/testify v1.9.0
 	golang.org/x/crypto v0.25.0
 	golang.org/x/net v0.24.0
@@ -36,12 +35,10 @@ require (
 	github.com/btcsuite/go-socks v0.0.0-20170105172521-4720035b7bfd // indirect
 	github.com/decred/dcrd/crypto/blake256 v1.0.1 // indirect
 	github.com/decred/dcrd/lru v1.1.2 // indirect
-	github.com/holiman/uint256 v1.3.1 // indirect
 	github.com/kkdai/bstream v1.0.0 // indirect
 	github.com/lightningnetwork/lnd/clock v1.0.1 // indirect
 	github.com/lightningnetwork/lnd/queue v1.0.1 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
-	github.com/rogpeppe/go-internal v1.12.0 // indirect
 	github.com/stretchr/objx v0.5.2 // indirect
 	go.etcd.io/bbolt v1.3.11 // indirect
 	golang.org/x/sys v0.22.0 // indirect
