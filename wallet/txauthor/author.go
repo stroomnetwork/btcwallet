@@ -92,40 +92,21 @@ type ChangeSource struct {
 // BUGS: Fee estimation may be off when redeeming non-compressed P2PKH outputs.
 func NewUnsignedTransaction(outputs []*wire.TxOut, feeRatePerKb btcutil.Amount,
 	fetchInputs InputSource, changeSource *ChangeSource) (*AuthoredTx, error) {
-	return NewUnsignedTransactionWithAddedStroomFee(outputs, feeRatePerKb, fetchInputs, changeSource, 1)
-}
-
-func NewUnsignedTransactionWithAddedStroomFee(outputs []*wire.TxOut, feeRatePerKb btcutil.Amount,
-	fetchInputs InputSource, changeSource *ChangeSource, feeCoefficient float64) (*AuthoredTx, error) {
-
-	if len(outputs) == 0 {
-		return nil, errors.New("no transaction outputs provided")
-	}
 
 	targetAmount := SumOutputValues(outputs)
-	fmt.Printf("targetAmount: %v\n", targetAmount)
 	estimatedSize := txsizes.EstimateVirtualSize(
 		0, 0, 1, 0, outputs, changeSource.ScriptSize,
 	)
-	targetFee := txrules.FeeForSerializeSize(feeRatePerKb, estimatedSize).MulF64(feeCoefficient)
-	fmt.Printf("targetFee: %v, estimatedSize: %v\n", targetFee, estimatedSize)
-
-	if targetAmount < targetFee {
-		return nil, fmt.Errorf("redeem amount(%v) < targetFee(%v) \n", int64(targetAmount), int64(targetFee))
-	}
+	targetFee := txrules.FeeForSerializeSize(feeRatePerKb, estimatedSize)
 
 	for {
 		inputAmount, inputs, inputValues, scripts, err := fetchInputs(targetAmount + targetFee)
 		if err != nil {
-			fmt.Errorf("fetchInputs error: %v\n", err)
 			return nil, err
 		}
 		if inputAmount < targetAmount+targetFee {
-			fmt.Errorf("insufficientFundsError: inputAmout(%d) < targetAmount(%d) + targetFee(%d)\n",
-				inputAmount, targetAmount, targetFee)
 			return nil, insufficientFundsError{}
 		}
-		fmt.Printf("inputAmount: %v, lengths: %v, %v, %v\n", inputAmount, len(inputs), len(inputValues), len(scripts))
 
 		// We count the types of inputs, which we'll use to estimate
 		// the vsize of the transaction.
@@ -150,23 +131,10 @@ func NewUnsignedTransactionWithAddedStroomFee(outputs []*wire.TxOut, feeRatePerK
 		)
 		maxRequiredFee := txrules.FeeForSerializeSize(feeRatePerKb, maxSignedSize)
 
-		var totalFee btcutil.Amount
-		if feeCoefficient == 0 {
-			totalFee = maxRequiredFee
-		} else {
-			totalFee = maxRequiredFee.MulF64(feeCoefficient)
-		}
 		remainingAmount := inputAmount - targetAmount
-		fmt.Printf("maxRequiredFee: %v, totalFee: %v, remainingAmount: %v\n", maxRequiredFee, totalFee, remainingAmount)
-		if remainingAmount < totalFee {
-			targetFee = totalFee
-			fmt.Printf("remainingAmount(%v) < totalFee(%v), continue\n", remainingAmount, totalFee)
+		if remainingAmount < maxRequiredFee {
+			targetFee = maxRequiredFee
 			continue
-		}
-
-		fmt.Printf("inputs size: %v\n", len(inputs))
-		for _, input := range inputs {
-			fmt.Printf("input: %v, amount: %v\n", input.PreviousOutPoint, inputAmount)
 		}
 
 		unsignedTransaction := &wire.MsgTx{
@@ -176,24 +144,16 @@ func NewUnsignedTransactionWithAddedStroomFee(outputs []*wire.TxOut, feeRatePerK
 			LockTime: 0,
 		}
 
-		if targetAmount < totalFee {
-			return nil, fmt.Errorf("redeem amount(%v) < totalFee(%v) \n", int(targetAmount), int64(totalFee))
-		}
-
-		// fees should be taken away from the output amount
-		outputs[0].Value -= int64(totalFee)
-
 		changeIndex := -1
-		// the change includes stroom fees
-		// TODO shall we check for dust change amount?
-		changeAmount := inputAmount - targetAmount - maxRequiredFee + totalFee
+		changeAmount := inputAmount - targetAmount - maxRequiredFee
 		changeScript, err := changeSource.NewScript()
 		if err != nil {
 			fmt.Errorf("changeSource.NewScript error: %v\n", err)
 			return nil, err
 		}
 		change := wire.NewTxOut(int64(changeAmount), changeScript)
-		if changeAmount != 0 && !txrules.IsDustOutput(change, txrules.DefaultRelayFeePerKb) {
+		if changeAmount != 0 && !txrules.IsDustOutput(change,
+			txrules.DefaultRelayFeePerKb) {
 			l := len(outputs)
 			unsignedTransaction.TxOut = append(outputs[:l:l], change)
 			changeIndex = l
