@@ -9,7 +9,6 @@ import (
 	"errors"
 	"fmt"
 	"github.com/btcsuite/btcd/btcec/v2"
-	"github.com/stroomnetwork/frost/crypto"
 	"math/rand"
 	"sort"
 
@@ -148,16 +147,6 @@ func (w *Wallet) txToOutputs(outputs []*wire.TxOut,
 	selectedUtxos []wire.OutPoint,
 	allowUtxo func(utxo wtxmgr.Credit) bool) (
 	*txauthor.AuthoredTx, error) {
-	return w.txToOutputsWithReemId(outputs, coinSelectKeyScope, changeKeyScope, account, minconf, feeSatPerKb, strategy, dryRun, selectedUtxos, allowUtxo, 0, []byte{})
-}
-
-func (w *Wallet) txToOutputsWithReemId(outputs []*wire.TxOut,
-	coinSelectKeyScope, changeKeyScope *waddrmgr.KeyScope,
-	account uint32, minconf int32, feeSatPerKb btcutil.Amount,
-	strategy CoinSelectionStrategy, dryRun bool,
-	selectedUtxos []wire.OutPoint,
-	allowUtxo func(utxo wtxmgr.Credit) bool, redeemId uint32, data []byte) (
-	*txauthor.AuthoredTx, error) {
 
 	chainClient, err := w.requireChainClient()
 	if err != nil {
@@ -190,7 +179,7 @@ func (w *Wallet) txToOutputsWithReemId(outputs []*wire.TxOut,
 	var tx *txauthor.AuthoredTx
 	err = walletdb.Update(w.db, func(dbtx walletdb.ReadWriteTx) error {
 		addrmgrNs, changeSource, err := w.addrMgrWithChangeSource(
-			dbtx, changeKeyScope, account, w.ChangeAddressKey,
+			dbtx, changeKeyScope, account,
 		)
 		if err != nil {
 			return err
@@ -258,15 +247,11 @@ func (w *Wallet) txToOutputsWithReemId(outputs []*wire.TxOut,
 			inputSource = makeInputSource(arrangedCoins)
 		}
 
-		tx, err = txauthor.NewUnsignedTransactionWithAddedStroomFee(
-			outputs, feeSatPerKb, inputSource, changeSource, w.FeeCoefficient,
+		tx, err = txauthor.NewUnsignedTransaction(
+			outputs, feeSatPerKb, inputSource, changeSource,
 		)
 		if err != nil {
 			return err
-		}
-
-		if redeemId != 0 {
-			tx.Tx.TxIn[0].Sequence = redeemId
 		}
 
 		// Randomize change position, if change exists, before signing.
@@ -308,11 +293,10 @@ func (w *Wallet) txToOutputsWithReemId(outputs []*wire.TxOut,
 		}
 		if !watchOnly || containsTaprootInput(tx) {
 
-			linearCombinations, err := getTaprootPubKeys(tx, w)
 			if err != nil {
 				return err
 			}
-			err = tx.AddAllInputScripts(w.FrostSigner, linearCombinations, data,
+			err = tx.AddAllInputScripts(
 				secretSource{w.Manager, addrmgrNs},
 			)
 			if err != nil {
@@ -370,33 +354,6 @@ func containsTaprootInput(tx *txauthor.AuthoredTx) bool {
 	}
 
 	return false
-}
-
-func getTaprootPubKeys(tx *txauthor.AuthoredTx, w *Wallet) (map[string]*crypto.LinearCombination, error) {
-	linearCombinations := make(map[string]*crypto.LinearCombination)
-	for i := range tx.Tx.TxIn {
-		pkScript := tx.PrevScripts[i]
-
-		if txscript.IsPayToTaproot(pkScript) {
-			_, addrs, _, err := txscript.ExtractPkScriptAddrs(pkScript, w.chainParams)
-			if err != nil {
-				continue
-			}
-
-			for _, addr := range addrs {
-				ethAddr, err := w.AddressMapStorage.GetEthAddress(addr.String())
-				if err != nil {
-					return nil, err
-				}
-				lc, err := w.lcFromEthAddr(ethAddr)
-				if err != nil {
-					return nil, err
-				}
-				linearCombinations[addr.String()] = lc
-			}
-		}
-	}
-	return linearCombinations, nil
 }
 
 func (w *Wallet) findEligibleOutputs(dbtx walletdb.ReadTx,
@@ -510,11 +467,11 @@ func inputYieldsPositively(credit *wire.TxOut,
 // scope is not specified. In that case, change addresses will always come from
 // the P2WKH key scope.
 func (w *Wallet) addrMgrWithChangeSource(dbtx walletdb.ReadWriteTx, changeKeyScope *waddrmgr.KeyScope, account uint32,
-	changeAddress *btcec.PublicKey) (walletdb.ReadWriteBucket, *txauthor.ChangeSource, error) {
+) (walletdb.ReadWriteBucket, *txauthor.ChangeSource, error) {
 
 	// Determine the address type for change addresses of the given
 	// account.
-	if changeKeyScope == nil || changeAddress != nil {
+	if changeKeyScope == nil {
 		changeKeyScope = &waddrmgr.KeyScopeBIP0086
 	}
 	addrType := waddrmgr.ScopeAddrMap[*changeKeyScope].InternalAddrType
@@ -558,9 +515,6 @@ func (w *Wallet) addrMgrWithChangeSource(dbtx walletdb.ReadWriteTx, changeKeySco
 			changeAddr btcutil.Address
 			err        error
 		)
-		if changeAddress != nil {
-			return txscript.PayToTaprootScript(changeAddress)
-		}
 		if account == waddrmgr.ImportedAddrAccount {
 			changeAddr, err = w.newChangeAddress(
 				addrmgrNs, 0, *changeKeyScope,
